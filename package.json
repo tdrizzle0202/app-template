@@ -2,7 +2,6 @@
   "name": "expo-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "packageManager": "npm@10.9.2",
   "scripts": {
     "start": "npx rork start -p fnk3d6mrvmkurdr3plyzz --tunnel",
     "start-web": "npx rork start -p fnk3d6mrvmkurdr3plyzz --web --tunnel",
