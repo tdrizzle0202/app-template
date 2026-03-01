@@ -2,8 +2,7 @@ import { router } from "expo-router";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TEXT_STYLES } from "@/constants/typography";
-import { COLORS } from "@/constants/designSystem";
+import { TYPE, COLORS } from "@/constants/theme";
 
 export default function SplashScreen() {
   const insets = useSafeAreaInsets();

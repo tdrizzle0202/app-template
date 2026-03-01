@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "HeightSnap",
-    "slug": "heightai",
-    "scheme": "heightsnap",
+    "name": "ExpoStarter",
+    "slug": "expo-starter",
+    "scheme": "expo-starter",
     "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,10 +14,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "bundleIdentifier": "com.terrykim.heightai",
+      "bundleIdentifier": "com.example.expostarter",
       "buildNumber": "19",
       "supportsTablet": false,
-      "simulator": true,
       "infoPlist": {
         "NSCameraUsageDescription": "We use the camera to take a photo and estimate height.",
         "NSPhotoLibraryUsageDescription": "We need photo access so you can pick an image to measure.",
@@ -26,12 +25,12 @@
       }
     },
     "android": {
-      "versionCode": 12,
+      "versionCode": 16,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.terrykim.heightai",
+      "package": "com.example.expostarter",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
@@ -42,13 +41,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
-          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
-        }
-      ],
       "expo-router",
       [
         "expo-image-picker",
@@ -66,7 +58,9 @@
       ],
       "expo-font",
       "expo-video",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-image",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

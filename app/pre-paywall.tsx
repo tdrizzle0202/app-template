@@ -4,8 +4,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Platform } from "
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
-import { COLORS, SPACING } from "@/constants/designSystem";
-import { FONTS } from "@/constants/typography";
+import { COLORS, SPACING, FONTS } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 

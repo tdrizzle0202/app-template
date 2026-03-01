@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FONTS } from '@/constants/typography';
+import { FONTS } from '@/constants/theme';
 
 interface Props {
   children: React.ReactNode;

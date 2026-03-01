@@ -1,139 +1,213 @@
-import { Tabs, router } from "expo-router";
-import { Home } from "lucide-react-native";
-import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useCallback, useMemo } from "react";
-import { View, TouchableOpacity, Text, Modal, StyleSheet, Alert, Platform } from "react-native";
-import * as ImageManipulator from 'expo-image-manipulator';
+import React, { useCallback, useEffect } from 'react';
+import { View, Pressable, StyleSheet, Platform } from 'react-native';
+import { Tabs } from 'expo-router';
+import { BlurView } from 'expo-blur';
+import { Home, TrendingUp, Heart, User } from 'lucide-react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "@/constants/designSystem";
-import { TEXT_STYLES } from "@/constants/typography";
-import { AddSheet } from "@/components/AddSheet";
-import { getCachedProStatus, useProStatusStore } from "@/lib/proStatusStore";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { COLORS } from '@/constants/theme';
 
+const TAB_BAR_HEIGHT = 85;
+const ACTIVE_COLOR = COLORS.primary;
+const INACTIVE_COLOR = 'rgba(255,255,255,0.35)';
+const SOS_COLOR = COLORS.accent;
+const SOS_INACTIVE_COLOR = 'rgba(246,173,85,0.45)';
 
+// ── SOS Glow (constant pulsing background) ──────────────
+function SOSGlow() {
+  const opacity = useSharedValue(0.1);
 
-export default function TabLayout() {
-  const [showAddSheet, setShowAddSheet] = useState(false);
-  const hasPro = useProStatusStore((state) => state.hasPro);
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withTiming(0.25, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true,
+    );
+  }, [opacity]);
 
-  const screenOptions = useMemo(() => ({
-    tabBarActiveTintColor: COLORS.white,
-    tabBarInactiveTintColor: COLORS.gray400,
-    headerShown: false,
-    lazy: true,
-    unmountOnBlur: false,
-    tabBarStyle: {
-      display: 'none' as const,
-      backgroundColor: '#181818',
-      borderTopWidth: 0,
-      paddingHorizontal: 10,
-      paddingTop: 8,
-    },
-    tabBarItemStyle: {
-      paddingHorizontal: 50,
-    },
-    tabBarLabelStyle: {
-      fontSize: TEXT_STYLES.small.fontSize,
-      fontFamily: TEXT_STYLES.small.fontFamily,
-      fontWeight: "500" as const,
-    },
-  }), []);
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return <Animated.View style={[styles.sosGlow, style]} />;
+}
+
+// ── Single tab item ──────────────────────────────────────
+interface TabItemProps {
+  icon: 'home' | 'trending' | 'heart' | 'user';
+  isFocused: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
+}
+
+const ICONS = {
+  home: Home,
+  trending: TrendingUp,
+  heart: Heart,
+  user: User,
+} as const;
+
+function TabItem({ icon, isFocused, onPress, onLongPress }: TabItemProps) {
+  const isSOS = icon === 'heart';
+  const Icon = ICONS[icon];
+
+  const iconColor = isSOS
+    ? isFocused
+      ? SOS_COLOR
+      : SOS_INACTIVE_COLOR
+    : isFocused
+      ? ACTIVE_COLOR
+      : INACTIVE_COLOR;
+
+  const iconSize = isSOS ? 28 : 24;
 
   return (
-    <View style={styles.container}>
-      <Tabs screenOptions={screenOptions}>
-        <Tabs.Screen
-          name="home"
-          options={{
-            title: "Home",
-            tabBarIcon: ({ color }) => (
-              <Home color={color} size={30} />
-            ),
-            tabBarItemStyle: {
-              marginLeft: 20,
-              marginRight: 60,
-            },
-          }}
-          listeners={{
-            tabPress: () => {
-              if (Platform.OS !== 'web') {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              }
-            },
-          }}
-        />
-
-      </Tabs>
-
-      {/* Floating Add Button - positioned to not interfere with tabs */}
-      <View style={[styles.fabContainer, styles.fabPosition]} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={async () => {
-            if (Platform.OS !== 'web') {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            }
-
-            let isPro = hasPro;
-            if (!isPro) {
-              isPro = await getCachedProStatus();
-            }
-
-            if (!isPro) {
-              router.push('/pre-paywall');
-              return;
-            }
-
-            setShowAddSheet(true);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Add photo"
-          activeOpacity={0.8}
-        >
-          <View style={{ width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}>
-            <Ionicons
-              name="flash"
-              size={32}
-              color={COLORS.white}
-            />
-            <Ionicons
-              name="flash-outline"
-              size={32}
-              color={COLORS.black}
-              style={{ position: 'absolute' }}
-            />
-          </View>
-        </TouchableOpacity>
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={styles.tabItem}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isFocused }}
+    >
+      <View style={styles.iconContainer}>
+        {isSOS && <SOSGlow />}
+        <Icon color={iconColor} size={iconSize} />
       </View>
+      {isFocused && !isSOS && <View style={styles.dot} />}
+      {isFocused && isSOS && <View style={styles.sosDot} />}
+    </Pressable>
+  );
+}
 
-      <AddSheet visible={showAddSheet} onClose={() => setShowAddSheet(false)} />
+// ── Custom tab bar ───────────────────────────────────────
+const TAB_ICONS: Record<string, TabItemProps['icon']> = {
+  index: 'home',
+  progress: 'trending',
+  sos: 'heart',
+  profile: 'user',
+};
+
+function CustomTabBar({ state, navigation }: any) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.tabBarWrapper, { paddingBottom: insets.bottom }]}>
+      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+      <View style={styles.tabBarContent}>
+        {state.routes.map((route: any, index: number) => {
+          const isFocused = state.index === index;
+          const icon = TAB_ICONS[route.name] ?? 'home';
+
+          const handlePress = () => {
+            if (Platform.OS !== 'web') {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          const handleLongPress = () => {
+            navigation.emit({ type: 'tabLongPress', target: route.key });
+          };
+
+          return (
+            <TabItem
+              key={route.key}
+              icon={icon}
+              isFocused={isFocused}
+              onPress={handlePress}
+              onLongPress={handleLongPress}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 }
 
+// ── Layout ───────────────────────────────────────────────
+export default function TabLayout() {
+  const renderTabBar = useCallback(
+    (props: any) => <CustomTabBar {...props} />,
+    [],
+  );
+
+  return (
+    <Tabs
+      tabBar={renderTabBar}
+      screenOptions={{
+        headerShown: false,
+        lazy: true,
+      }}
+    >
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="progress" />
+      <Tabs.Screen name="sos" />
+      <Tabs.Screen name="profile" />
+    </Tabs>
+  );
+}
+
+// ── Styles ───────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  fabContainer: {
-    position: "absolute",
+  tabBarWrapper: {
+    position: 'absolute',
+    bottom: 0,
     left: 0,
     right: 0,
-    alignItems: "center",
-    zIndex: 999,
+    height: TAB_BAR_HEIGHT,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(15,18,24,0.95)',
+    overflow: 'hidden',
   },
-  fabPosition: {
-    bottom: 20,
+  tabBarContent: {
+    flex: 1,
+    flexDirection: 'row',
   },
-  fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#C5B5E8', // Pro Purple
-    borderWidth: 2,
-    borderColor: COLORS.black,
-    justifyContent: "center",
-    alignItems: "center",
-    ...SHADOWS.lg,
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 12,
+    gap: 6,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: ACTIVE_COLOR,
+  },
+  sosDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: SOS_COLOR,
+  },
+  sosGlow: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: SOS_COLOR,
   },
 });

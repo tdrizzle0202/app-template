@@ -14,8 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING } from "@/constants/designSystem";
-import { FONTS } from "@/constants/typography";
+import { COLORS, SPACING, FONTS } from "@/constants/theme";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 

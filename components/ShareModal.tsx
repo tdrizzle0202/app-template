@@ -6,9 +6,8 @@ import { X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import { FONTS, TEXT_STYLES } from '@/constants/typography';
+import { FONTS, TYPE, COLORS, SHADOWS } from '@/constants/theme';
 import { getPhotoUrl } from '@/lib/photoStorage';
-import { COLORS, SHADOWS } from '@/constants/designSystem';
 import { HEIGHT_GROUPS } from '@/lib/heightGroups';
 import { formatHeight } from '@/lib/unitPreference';
 

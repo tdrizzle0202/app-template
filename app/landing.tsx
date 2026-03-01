@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
-import { COLORS, SPACING } from "@/constants/designSystem";
+import { COLORS, SPACING } from "@/constants/theme";
 import { getCachedProStatus, useProStatusStore } from "@/lib/proStatusStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");

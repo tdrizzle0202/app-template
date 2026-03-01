@@ -4,8 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View, Platform, ScrollView, Linking
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { ChevronRight, ChevronLeft } from "lucide-react-native";
-import { TEXT_STYLES } from "@/constants/typography";
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "@/constants/designSystem";
+import { TYPE, COLORS, SPACING, RADIUS, SHADOWS } from "@/constants/theme";
 import { restorePurchases } from "@/lib/revenueCat";
 import { useProStatusStore } from "@/lib/proStatusStore";
 

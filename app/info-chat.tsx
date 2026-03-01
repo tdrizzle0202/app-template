@@ -4,12 +4,10 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platfo
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { ArrowLeft, Send } from "lucide-react-native";
-import { TEXT_STYLES } from "@/constants/typography";
-import { COLORS, SPACING } from "@/constants/designSystem";
+import { TYPE, COLORS, SPACING } from "@/constants/theme";
 import { uploadPhoto } from "@/lib/photoStorage";
 import { insertPlaceholder } from "@/lib/heightStore";
 import { callHeightEstimation } from "@/lib/heightEstimation";
-import { showWaitingAd } from "@/lib/admobAds";
 import { getCachedProStatus, useProStatusStore } from "@/lib/proStatusStore";
 
 export default function InfoChatScreen() {
@@ -57,15 +55,6 @@ export default function InfoChatScreen() {
       // 3) Navigate home immediately
       router.push('/(tabs)/home');
 
-      // 4) Wait ~500ms before showing ad (guarantees UI finished rendering)
-      setTimeout(async () => {
-        try {
-          const hasPro = useProStatusStore.getState().hasPro;
-          await showWaitingAd(hasPro);
-        } catch {
-          // Ignore ad issues
-        }
-      }, 500);
     } catch (error) {
       console.error('Failed to process image:', error);
       if (Platform.OS === 'web') {

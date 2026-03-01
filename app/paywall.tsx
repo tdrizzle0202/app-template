@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, Platform, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { TEXT_STYLES } from "@/constants/typography";
+import { TYPE } from "@/constants/theme";
 import { getSubscriptionPackages, purchasePackage } from "@/lib/revenueCat";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useProStatusStore } from "@/lib/proStatusStore";

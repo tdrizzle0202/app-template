@@ -9,7 +9,7 @@ import { getById, updateName, deleteResult } from "@/lib/heightStore";
 import { getPhotoUrl } from "@/lib/photoStorage";
 import { getUnitPreference, formatHeight as formatHeightUtil, UnitType } from "@/lib/unitPreference";
 import { ShareModal } from "@/components/ShareModal";
-import { TEXT_STYLES } from "@/constants/typography";
+import { TYPE } from "@/constants/theme";
 import { isDemoItem, DEMO_RESULTS, DEMO_IMAGES } from "@/lib/demoData";
 
 type HeightDataItem = {
