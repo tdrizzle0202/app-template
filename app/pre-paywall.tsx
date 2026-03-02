@@ -1,18 +1,15 @@
 import { router } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Platform } from "react-native";
+import { StyleSheet, Text, View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import * as Haptics from "expo-haptics";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { COLORS, SPACING, FONTS } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function PrePaywallScreen() {
     const handleContinue = () => {
-        if (Platform.OS !== "web") {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
         router.push("/paywall");
     };
 
@@ -21,7 +18,7 @@ export default function PrePaywallScreen() {
             <View style={styles.content}>
                 <View style={styles.headerContainer}>
                     <Text style={styles.headerText}>
-                        Try <Text style={styles.highlightText}>HeightSnap</Text> for <Text style={styles.highlightText}>FREE</Text>
+                        Try <Text style={styles.highlightText}>Fein</Text> for <Text style={styles.highlightText}>FREE</Text>
                     </Text>
                 </View>
 
@@ -35,13 +32,13 @@ export default function PrePaywallScreen() {
                     </View>
                 </View>
 
-                <TouchableOpacity
+                <PressableScale
                     style={styles.continueButton}
                     onPress={handleContinue}
-                    activeOpacity={0.8}
+                    haptic="Medium"
                 >
                     <Text style={styles.continueButtonText}>Continue</Text>
-                </TouchableOpacity>
+                </PressableScale>
             </View>
         </SafeAreaView>
     );

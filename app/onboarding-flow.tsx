@@ -4,9 +4,6 @@ import {
     StyleSheet,
     Text,
     View,
-    TouchableOpacity,
-    Dimensions,
-    Platform,
     Animated,
     Easing,
 } from "react-native";
@@ -14,11 +11,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING, FONTS } from "@/constants/theme";
-import * as Haptics from "expo-haptics";
+import { COLORS, SPACING, FONTS, TYPE } from "@/constants/theme";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { LinearGradient } from "expo-linear-gradient";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const SLIDES = [
     {
@@ -176,22 +171,14 @@ export default function OnboardingScreen() {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const handleNext = () => {
-        if (Platform.OS !== "web") {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-
         if (currentIndex < SLIDES.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
-            router.replace("/pre-paywall");
+            router.replace("/paywall");
         }
     };
 
     const handleBack = () => {
-        if (Platform.OS !== "web") {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-
         if (currentIndex > 0) {
             setCurrentIndex(currentIndex - 1);
         } else {
@@ -205,13 +192,13 @@ export default function OnboardingScreen() {
         <SafeAreaView style={styles.container}>
             {/* Top Navigation */}
             <View style={styles.topNav}>
-                <TouchableOpacity
+                <PressableScale
                     style={styles.navButton}
                     onPress={handleBack}
-                    activeOpacity={0.7}
+                    scaleDown={0.9}
                 >
                     <Ionicons name="chevron-back" size={24} color={COLORS.black} />
-                </TouchableOpacity>
+                </PressableScale>
 
                 <View style={styles.dotsContainer}>
                     {SLIDES.map((_, index) => (
@@ -225,13 +212,13 @@ export default function OnboardingScreen() {
                     ))}
                 </View>
 
-                <TouchableOpacity
+                <PressableScale
                     style={styles.navButton}
                     onPress={handleNext}
-                    activeOpacity={0.7}
+                    scaleDown={0.9}
                 >
                     <Ionicons name="chevron-forward" size={24} color={COLORS.black} />
-                </TouchableOpacity>
+                </PressableScale>
             </View>
 
             {/* Content */}
@@ -257,14 +244,13 @@ export default function OnboardingScreen() {
                     <AnimatedText text={currentSlide.text} trigger={currentIndex} />
                 </View>
 
-                <TouchableOpacity
+                <PressableScale
                     style={styles.nextButton}
                     onPress={handleNext}
-                    activeOpacity={0.8}
                 >
                     <Text style={styles.nextButtonText}>Next</Text>
                     <Ionicons name="chevron-forward" size={20} color={COLORS.white} />
-                </TouchableOpacity>
+                </PressableScale>
             </View>
         </SafeAreaView>
     );
@@ -349,7 +335,7 @@ const styles = StyleSheet.create({
     },
     titleText: {
         fontSize: 34,
-        fontFamily: "Nunito_700Bold",
+        fontFamily: FONTS.bold,
         color: COLORS.black,
         textAlign: "center",
     },

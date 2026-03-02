@@ -3,20 +3,17 @@ import React, { useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   Platform,
-  Dimensions,
   Animated,
   Linking,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import * as Haptics from "expo-haptics";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { COLORS, SPACING } from "@/constants/theme";
 import { getCachedProStatus, useProStatusStore } from "@/lib/proStatusStore";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const ONBOARDING_IMAGES = [
   require("../assets/onboarding/IMG_4969.png"),
@@ -26,16 +23,17 @@ const ONBOARDING_IMAGES = [
   require("../assets/onboarding/IMG_4979.png"),
 ];
 
-const IMAGE_WIDTH = SCREEN_WIDTH * 0.75;
-const IMAGE_HEIGHT = IMAGE_WIDTH * 1.5;
 const IMAGE_GAP = 10;
-const TOTAL_WIDTH = (IMAGE_WIDTH + IMAGE_GAP) * ONBOARDING_IMAGES.length;
 
-const TERMS_URL = "https://heightai.netlify.app/terms.html";
+const TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
 const PRIVACY_URL = "https://heightai.netlify.app/privacy.html";
 
 export default function LandingScreen() {
   const hasPro = useProStatusStore((state) => state.hasPro);
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const IMAGE_WIDTH = SCREEN_WIDTH * 0.75;
+  const IMAGE_HEIGHT = IMAGE_WIDTH * 1.5;
+  const TOTAL_WIDTH = (IMAGE_WIDTH + IMAGE_GAP) * ONBOARDING_IMAGES.length;
   const scrollX = useRef(new Animated.Value(0)).current;
 
   // Auto-scroll animation - seamless infinite loop
@@ -64,7 +62,7 @@ export default function LandingScreen() {
       isCancelled = true;
       scrollX.stopAnimation();
     };
-  }, [scrollX]);
+  }, [scrollX, TOTAL_WIDTH]);
 
   useEffect(() => {
     let isMounted = true;
@@ -72,7 +70,7 @@ export default function LandingScreen() {
     const ensureProStatus = async () => {
       const isPro = await getCachedProStatus();
       if (isPro && isMounted) {
-        router.replace("/(tabs)/home");
+        router.replace("/(tabs)");
       }
     };
 
@@ -85,22 +83,18 @@ export default function LandingScreen() {
 
   useEffect(() => {
     if (hasPro) {
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)");
     }
   }, [hasPro]);
 
   const handleGetStarted = async () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-
     const isPro = await getCachedProStatus();
     if (isPro) {
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)");
       return;
     }
 
-    router.push("/onboarding-flow");
+    router.push("/onboarding");
   };
 
   const handleOpenTerms = () => {
@@ -135,7 +129,7 @@ export default function LandingScreen() {
             ]}
           >
             {duplicatedImages.map((image, index) => (
-              <View key={index} style={styles.imageWrapper}>
+              <View key={index} style={[styles.imageWrapper, { width: IMAGE_WIDTH, height: IMAGE_HEIGHT }]}>
                 <Image
                   source={image}
                   style={styles.slideshowImage}
@@ -149,13 +143,13 @@ export default function LandingScreen() {
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
           {/* Get Started Button */}
-          <TouchableOpacity
+          <PressableScale
             style={styles.getStartedButton}
             onPress={handleGetStarted}
-            activeOpacity={0.8}
+            haptic="Medium"
           >
             <Text style={styles.getStartedText}>Get started</Text>
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Terms and Privacy */}
           <Text style={styles.termsText}>
@@ -200,8 +194,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   imageWrapper: {
-    width: IMAGE_WIDTH,
-    height: IMAGE_HEIGHT,
     marginRight: IMAGE_GAP,
     borderRadius: 8,
     overflow: "hidden",

@@ -1,72 +1,45 @@
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TYPE, COLORS } from "@/constants/theme";
+import { StyleSheet, View } from "react-native";
+import * as ExpoSplashScreen from "expo-splash-screen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useProStatusStore } from "@/lib/proStatusStore";
 
-export default function SplashScreen() {
-  const insets = useSafeAreaInsets();
-
-  console.log('SplashScreen rendered');
-
+export default function Index() {
   useEffect(() => {
-    console.log('SplashScreen useEffect - setting timer to navigate');
-
-    const checkProAndNavigate = async () => {
-      // Wait for splash animation
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
+    (async () => {
       try {
-        const { default: AsyncStorage } = require('@react-native-async-storage/async-storage');
-        const { useProStatusStore } = require("@/lib/proStatusStore");
-
-        // Check if user has seen onboarding
         const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
         const hasPro = useProStatusStore.getState().hasPro;
 
         console.log('Launch checks:', { hasSeenOnboarding, hasPro });
 
         if (!hasSeenOnboarding) {
-          // New user -> Landing -> Onboarding
-          router.replace("/landing");
+          router.replace("/onboarding/welcome");
         } else if (hasPro) {
-          // Pro user -> Home
-          router.replace("/(tabs)/home");
+          router.replace("/(tabs)");
         } else {
-          // Existing user, not Pro -> Pre-Paywall
-          router.replace("/pre-paywall");
+          router.replace("/paywall");
         }
       } catch (error) {
         console.error('Error during launch checks:', error);
-        // Fallback to landing on error
-        router.replace("/landing");
+        router.replace("/onboarding/welcome");
       }
-    };
 
-    checkProAndNavigate();
+      // Hide native splash after navigation commits
+      requestAnimationFrame(() => {
+        ExpoSplashScreen.hideAsync().catch(console.error);
+      });
+    })();
   }, []);
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <View style={styles.logo}>
-        <Text style={styles.logoText}>HeightSnap</Text>
-      </View>
-    </View>
-  );
+  // Blank view matching splash color — native splash covers this
+  return <View style={styles.container} />;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logo: {
-    alignItems: "center",
-  },
-  logoText: {
-    ...TEXT_STYLES.h0,
-    color: COLORS.black,
+    backgroundColor: '#0F1218',
   },
 });

@@ -26,8 +26,8 @@ export const COLORS = {
   accent: '#F6AD55',
   accentGlow: 'rgba(246,173,85,0.18)',
 
-  danger: '#FC8181',
-  dangerGlow: 'rgba(252,129,129,0.15)',
+  danger: '#D95555',
+  dangerGlow: 'rgba(217,85,85,0.15)',
 
   success: '#68D391',
   successGlow: 'rgba(104,211,145,0.12)',
@@ -35,41 +35,62 @@ export const COLORS = {
   text: '#F0F2F5',
   textSecondary: '#8B98A9',
   textMuted: '#3E4A5A',
+
+  black: '#000000',
+  white: '#FFFFFF',
+  gray500: '#6B7280',
+  gray600: '#4B5563',
 } as const;
 
 // ── Typography ─────────────────────────────────────────
 export const TYPE = StyleSheet.create({
   display: {
     fontSize: 34,
+    lineHeight: 41,
     fontWeight: '800',
     fontFamily: FONTS.extrabold,
   },
   heading: {
     fontSize: 24,
+    lineHeight: 31,
     fontWeight: '700',
     fontFamily: FONTS.bold,
   },
   subheading: {
     fontSize: 17,
+    lineHeight: 23,
     fontWeight: '600',
     fontFamily: FONTS.semibold,
   },
   body: {
     fontSize: 16,
+    lineHeight: 22,
     fontWeight: '500',
     fontFamily: FONTS.medium,
   },
   caption: {
     fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
     fontFamily: FONTS.semibold,
   },
   streakNumber: {
     fontSize: 64,
+    lineHeight: 70,
     fontWeight: '900',
     fontFamily: FONTS.extrabold,
   },
 });
+
+// ── TEXT_STYLES alias (legacy names → TYPE) ──────────────
+export const TEXT_STYLES = {
+  h0: TYPE.display,
+  h1: TYPE.heading,
+  h2: TYPE.subheading,
+  h3: TYPE.body,
+  body: TYPE.body,
+  small: TYPE.caption,
+};
 
 // ── Spacing (8px grid) ─────────────────────────────────
 export const SPACING = {
@@ -79,6 +100,7 @@ export const SPACING = {
   lg: 24,
   xl: 32,
   xxl: 40,
+  '3xl': 48,
 } as const;
 
 // ── Radius ─────────────────────────────────────────────
@@ -137,14 +159,6 @@ export const SPRING_BUTTON = {
 export const TIMING_CONFIG = {
   entrance: 400,
   counter: 600,
-} as const;
-
-// ── Haptics ────────────────────────────────────────────
-export const HAPTICS = {
-  tap: 'Light',
-  toggle: 'Medium',
-  milestone: 'Success',
-  reset: 'Warning',
 } as const;
 
 // ── Glass Card ─────────────────────────────────────────

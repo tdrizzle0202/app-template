@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FONTS } from '@/constants/theme';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { COLORS, FONTS, RADIUS, SPACING } from '@/constants/theme';
 
 interface Props {
   children: React.ReactNode;
@@ -33,12 +34,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <Text style={styles.message}>
             {this.state.error?.message || 'An unexpected error occurred'}
           </Text>
-          <TouchableOpacity
-            style={styles.button}
+          <PressableScale
             onPress={() => this.setState({ hasError: false, error: undefined })}
+            style={styles.button}
           >
             <Text style={styles.buttonText}>Try Again</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       );
     }
@@ -52,34 +53,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#ffffff',
+    padding: SPACING.lg,
+    backgroundColor: COLORS.bg,
   },
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#000000',
-    marginBottom: 16,
+    color: COLORS.text,
+    marginBottom: SPACING.md,
     fontFamily: FONTS.medium,
   },
   message: {
     fontSize: 16,
-    color: '#666666',
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: SPACING.xl,
     lineHeight: 24,
     fontFamily: FONTS.regular,
   },
   button: {
-    backgroundColor: '#000000',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm + 4,
+    borderRadius: RADIUS.sm,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: COLORS.bg,
     fontFamily: FONTS.medium,
   },
 });

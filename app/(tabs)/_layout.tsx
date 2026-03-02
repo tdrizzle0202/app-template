@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { View, Pressable, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { Home, TrendingUp, Heart, User } from 'lucide-react-native';
@@ -10,15 +10,13 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { COLORS } from '@/constants/theme';
 
-const TAB_BAR_HEIGHT = 85;
 const ACTIVE_COLOR = COLORS.primary;
 const INACTIVE_COLOR = 'rgba(255,255,255,0.35)';
 const SOS_COLOR = COLORS.accent;
-const SOS_INACTIVE_COLOR = 'rgba(246,173,85,0.45)';
 
 // ── SOS Glow (constant pulsing background) ──────────────
 function SOSGlow() {
@@ -57,36 +55,47 @@ const ICONS = {
 function TabItem({ icon, isFocused, onPress, onLongPress }: TabItemProps) {
   const isSOS = icon === 'heart';
   const Icon = ICONS[icon];
+  const iconSize = isSOS ? 26 : 24;
 
-  const iconColor = isSOS
-    ? isFocused
-      ? SOS_COLOR
-      : SOS_INACTIVE_COLOR
-    : isFocused
-      ? ACTIVE_COLOR
-      : INACTIVE_COLOR;
+  const progress = useSharedValue(isFocused ? 1 : 0);
+  useEffect(() => {
+    progress.value = withTiming(isFocused ? 1 : 0, { duration: 250 });
+  }, [isFocused]);
 
-  const iconSize = isSOS ? 28 : 24;
+  const activeStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  const inactiveStyle = useAnimatedStyle(() => ({ opacity: 1 - progress.value }));
+  const dotStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: progress.value }],
+  }));
+
+  const activeColor = isSOS ? SOS_COLOR : ACTIVE_COLOR;
+  const inactiveColor = isSOS ? SOS_COLOR : INACTIVE_COLOR;
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       onLongPress={onLongPress}
+      scaleDown={0.85}
+      haptic="Heavy"
       style={styles.tabItem}
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
     >
       <View style={styles.iconContainer}>
-        {isSOS && <SOSGlow />}
-        <Icon color={iconColor} size={iconSize} />
+        <Animated.View style={[StyleSheet.absoluteFill, styles.iconCenter, inactiveStyle]}>
+          <Icon color={inactiveColor} size={iconSize} />
+        </Animated.View>
+        <Animated.View style={[styles.iconCenter, activeStyle]}>
+          <Icon color={activeColor} size={iconSize} />
+        </Animated.View>
       </View>
-      {isFocused && !isSOS && <View style={styles.dot} />}
-      {isFocused && isSOS && <View style={styles.sosDot} />}
-    </Pressable>
+      <Animated.View style={[isSOS ? styles.sosDot : styles.dot, dotStyle]} />
+    </PressableScale>
   );
 }
 
-// ── Custom tab bar ───────────────────────────────────────
+// ── Tab icon mapping ─────────────────────────────────────
 const TAB_ICONS: Record<string, TabItemProps['icon']> = {
   index: 'home',
   progress: 'trending',
@@ -94,45 +103,45 @@ const TAB_ICONS: Record<string, TabItemProps['icon']> = {
   profile: 'user',
 };
 
-function CustomTabBar({ state, navigation }: any) {
+// ── Floating pill tab bar ────────────────────────────────
+function FloatingTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.tabBarWrapper, { paddingBottom: insets.bottom }]}>
-      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-      <View style={styles.tabBarContent}>
-        {state.routes.map((route: any, index: number) => {
-          const isFocused = state.index === index;
-          const icon = TAB_ICONS[route.name] ?? 'home';
+    <View style={[styles.tabBarOuter, { bottom: Math.max(24, insets.bottom) }]}>
+      <View style={styles.tabBarPill}>
+        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+        <View style={styles.tabBarContent}>
+          {state.routes.map((route: any, index: number) => {
+            const isFocused = state.index === index;
+            const icon = TAB_ICONS[route.name] ?? 'home';
 
-          const handlePress = () => {
-            if (Platform.OS !== 'web') {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+            const handlePress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
 
-          const handleLongPress = () => {
-            navigation.emit({ type: 'tabLongPress', target: route.key });
-          };
+            const handleLongPress = () => {
+              navigation.emit({ type: 'tabLongPress', target: route.key });
+            };
 
-          return (
-            <TabItem
-              key={route.key}
-              icon={icon}
-              isFocused={isFocused}
-              onPress={handlePress}
-              onLongPress={handleLongPress}
-            />
-          );
-        })}
+            return (
+              <TabItem
+                key={route.key}
+                icon={icon}
+                isFocused={isFocused}
+                onPress={handlePress}
+                onLongPress={handleLongPress}
+              />
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -141,7 +150,7 @@ function CustomTabBar({ state, navigation }: any) {
 // ── Layout ───────────────────────────────────────────────
 export default function TabLayout() {
   const renderTabBar = useCallback(
-    (props: any) => <CustomTabBar {...props} />,
+    (props: any) => <FloatingTabBar {...props} />,
     [],
   );
 
@@ -163,16 +172,23 @@ export default function TabLayout() {
 
 // ── Styles ───────────────────────────────────────────────
 const styles = StyleSheet.create({
-  tabBarWrapper: {
+  tabBarOuter: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: TAB_BAR_HEIGHT,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-    backgroundColor: 'rgba(15,18,24,0.95)',
+    left: 20,
+    right: 20,
+  },
+  tabBarPill: {
+    height: 60,
+    borderRadius: 40,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(20,24,32,0.85)',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   tabBarContent: {
     flex: 1,
@@ -182,12 +198,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 12,
-    gap: 6,
+    gap: 4,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconCenter: {
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -205,9 +224,9 @@ const styles = StyleSheet.create({
   },
   sosGlow: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: SOS_COLOR,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(246,173,85,0.15)',
   },
 });

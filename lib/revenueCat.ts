@@ -1,29 +1,20 @@
 import Purchases, { CustomerInfo, PurchasesPackage } from 'react-native-purchases';
-import { Platform } from 'react-native';
 
-// RevenueCat API Keys - Add these to your .env file
-const IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || '';
-const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY || '';
-const PRO_ENTITLEMENT_ID = 'Custom';
+const API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || '';
+const PRO_ENTITLEMENT_ID = 'pro';
 
 let isInitialized = false;
 
-/**
- * Initialize RevenueCat SDK
- * Call this once when the app starts
- */
 export async function initializeRevenueCat(): Promise<void> {
   if (isInitialized) return;
 
   try {
-    const apiKey = Platform.OS === 'ios' ? IOS_API_KEY : ANDROID_API_KEY;
-
-    if (!apiKey) {
+    if (!API_KEY) {
       console.warn('RevenueCat API key not configured');
       return;
     }
 
-    await Purchases.configure({ apiKey });
+    await Purchases.configure({ apiKey: API_KEY });
     isInitialized = true;
 
     if (__DEV__) {

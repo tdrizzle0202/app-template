@@ -1,22 +1,68 @@
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, Platform, ActivityIndicator, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
-import { TYPE } from "@/constants/theme";
-import { getSubscriptionPackages, purchasePackage } from "@/lib/revenueCat";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Linking,
+} from "react-native";
+import { Image } from "expo-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+  FadeInUp,
+} from "react-native-reanimated";
+import { PressableScale } from "@/components/ui/PressableScale";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
+import {
+  COLORS,
+  TYPE,
+  SPACING,
+  RADIUS,
+  TIMING_CONFIG,
+} from "@/constants/theme";
+import {
+  getSubscriptionPackages,
+  purchasePackage,
+  restorePurchases,
+} from "@/lib/revenueCat";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useProStatusStore } from "@/lib/proStatusStore";
 
+const APP_ICON = require("@/assets/icon.png");
+const TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
+const PRIVACY_URL = "https://feinapp.netlify.app";
+
+// ── Helpers ─────────────────────────────────────────────
+function getQuitDate(): string {
+  const date = new Date();
+  date.setDate(date.getDate() + 90);
+  return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+}
+
+type PlanType = "annual" | "lifetime";
+
+// ── Main screen ─────────────────────────────────────────
 export default function PaywallScreen() {
+  const insets = useSafeAreaInsets();
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>("annual");
 
-  const refreshProStatus = useProStatusStore((state) => state.refreshProStatus);
-  const setProStatus = useProStatusStore((state) => state.setProStatus);
-  const hasPro = useProStatusStore((state) => state.hasPro);
+  const refreshProStatus = useProStatusStore((s) => s.refreshProStatus);
+  const setProStatus = useProStatusStore((s) => s.setProStatus);
+  const hasPro = useProStatusStore((s) => s.hasPro);
+
+  const quitDate = useMemo(() => getQuitDate(), []);
 
   useEffect(() => {
     loadPackages();
@@ -24,320 +70,448 @@ export default function PaywallScreen() {
 
   useEffect(() => {
     if (hasPro) {
-      router.replace('/(tabs)/home');
+      router.replace("/(tabs)");
     }
   }, [hasPro]);
 
   const loadPackages = async () => {
     try {
       const availablePackages = await getSubscriptionPackages();
+      if (__DEV__) {
+        console.log(
+          "RevenueCat packages:",
+          availablePackages.map((p) => ({
+            id: p.identifier,
+            product: p.product.identifier,
+            price: p.product.priceString,
+          }))
+        );
+      }
       setPackages(availablePackages);
     } catch (error) {
-      console.error('Failed to load packages:', error);
+      console.error("Failed to load packages:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePurchase = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
+  const annualPackage =
+    packages.find((p) => p.identifier === "$rc_annual") ??
+    packages.find((p) => p.product.identifier.toLowerCase().includes("annual") || p.product.identifier.toLowerCase().includes("yearly"));
+  const lifetimePackage =
+    packages.find((p) => p.identifier === "$rc_lifetime") ??
+    packages.find((p) => p.product.identifier.toLowerCase().includes("lifetime"));
 
-    if (packages.length === 0) {
-      Alert.alert('Error', 'No subscription packages available');
+  const handlePurchase = async () => {
+    const pkg =
+      selectedPlan === "annual" ? annualPackage : lifetimePackage;
+
+    if (!pkg) {
+      Alert.alert("Error", "Package not available. Please try again later.");
       return;
     }
 
     try {
       setPurchasing(true);
-
-      // Get the weekly package (or first available)
-      const weeklyPackage = packages.find(p => p.identifier === '$rc_weekly') || packages[0];
-
-      const result = await purchasePackage(weeklyPackage);
+      const result = await purchasePackage(pkg);
 
       if (result.success) {
         setProStatus(true);
-        refreshProStatus().catch((error) => {
-          console.error('Failed to refresh Pro status after purchase:', error);
-        });
-
-        // Purchase successful - navigate to home
-        router.replace('/(tabs)/home');
+        refreshProStatus().catch((err) =>
+          console.error("Failed to refresh Pro status:", err)
+        );
+        router.replace("/(tabs)");
       }
     } catch (error) {
-      console.error('Purchase error:', error);
+      console.error("Purchase error:", error);
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    try {
+      setPurchasing(true);
+      const result = await restorePurchases();
+      if (result.success) {
+        refreshProStatus().catch((err) =>
+          console.error("Failed to refresh after restore:", err)
+        );
+      } else {
+        Alert.alert(
+          "No Purchases Found",
+          "We couldn't find any previous purchases to restore."
+        );
+      }
+    } catch (error) {
+      console.error("Restore error:", error);
+      Alert.alert("Error", "Failed to restore purchases. Please try again.");
     } finally {
       setPurchasing(false);
     }
   };
 
   const handleClose = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    router.replace('/(tabs)/home');
+    router.replace("/(tabs)");
   };
 
-  const handleBack = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      // Fallback if no history (e.g. deep link or dev reload)
-      router.replace('/pre-paywall');
-    }
-  };
+  // ── Pricing data (real or mock) ───────────────────────
+  const annualPrice = annualPackage
+    ? annualPackage.product.priceString
+    : "$34.99";
+  const annualMonthly = annualPackage
+    ? `$${(annualPackage.product.price / 12).toFixed(2)}/mo`
+    : "$2.92/mo";
+  const lifetimePrice = lifetimePackage
+    ? lifetimePackage.product.priceString
+    : "$99.99";
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <ActivityIndicator size="large" color="#000000" />
-        </View>
-      </SafeAreaView>
+  // ── Floating icon animation ─────────────────────────────
+  const iconFloat = useSharedValue(0);
+
+  useEffect(() => {
+    iconFloat.value = withRepeat(
+      withTiming(-10, {
+        duration: 3000,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      -1,
+      true
     );
-  }
+  }, []);
+
+  const iconAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: iconFloat.value }],
+  }));
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header - Fixed at top */}
-      <View style={styles.headerContainer}>
-        <View style={styles.navRow}>
-          <TouchableOpacity
-            onPress={handleBack}
-            style={styles.navButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="chevron-back" size={28} color="rgba(0,0,0,0.3)" />
-          </TouchableOpacity>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AnimatedBackground />
 
-          <TouchableOpacity
-            onPress={handleClose}
-            style={styles.navButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="close" size={28} color="rgba(0,0,0,0.3)" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Header — close button */}
+      <Animated.View
+        entering={FadeInUp.duration(TIMING_CONFIG.entrance).delay(0)}
+        style={styles.header}
+      >
+        <View style={styles.headerSpacer} />
+        <PressableScale
+          onPress={handleClose}
+          scaleDown={0.9}
+          haptic="Medium"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="close" size={28} color={COLORS.textSecondary} />
+        </PressableScale>
+      </Animated.View>
 
-      {/* Main content - Pushed down */}
-      <View style={styles.content}>
-        {/* 50% OFF Badge */}
-        <View style={styles.offerContainer}>
-          <Text style={styles.oneTimeOfferText}>Your Onetime Offer</Text>
-          <Text style={styles.offerText}>50% OFF</Text>
-        </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* App icon hero */}
+        <Animated.View
+          entering={FadeInUp.duration(TIMING_CONFIG.entrance).delay(100)}
+          style={styles.iconHero}
+        >
+          <Animated.View style={iconAnimatedStyle}>
+            <Image source={APP_ICON} style={styles.appIcon} />
+          </Animated.View>
+        </Animated.View>
 
-        <View style={styles.spacer} />
+        {/* Motivational headline */}
+        <Animated.View
+          entering={FadeInUp.duration(TIMING_CONFIG.entrance).delay(200)}
+          style={styles.headlineContainer}
+        >
+          <Text style={styles.headline}>
+            We'll help you{" "}
+            <Text style={styles.headlineAccent}>quit nicotine</Text> by{" "}
+            {quitDate}!
+          </Text>
+        </Animated.View>
 
-        {/* Pricing Box */}
-        <View style={styles.pricingBox}>
-          <Text style={styles.autoRenewText}>Cancel Anytime</Text>
-          <Text style={styles.trialText}>3 Day Trial</Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.originalPriceText}>$9.99</Text>
-            <Text style={styles.priceText}>$7.99/week</Text>
+        {/* Plan cards */}
+        <Animated.View
+          entering={FadeInUp.duration(TIMING_CONFIG.entrance).delay(300)}
+        >
+          {/* Yearly plan */}
+          <View style={styles.cardWrapper}>
+            {/* "Most popular" badge */}
+            <View style={styles.badgeContainer}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Most popular</Text>
+              </View>
+            </View>
+            <PressableScale
+              onPress={() => setSelectedPlan("annual")}
+              style={[
+                styles.planCard,
+                selectedPlan === "annual"
+                  ? styles.planCardSelected
+                  : styles.planCardUnselected,
+              ]}
+            >
+              <View style={styles.planCardContent}>
+                <View style={styles.planLeft}>
+                  <Text style={styles.planTitle}>12 months</Text>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.originalPrice}>$79.99/yr</Text>
+                    <Text style={styles.discountedPrice}>{annualPrice}/yr</Text>
+                  </View>
+                </View>
+                <View style={styles.planRight}>
+                  <Text style={styles.perMonth}>{annualMonthly}</Text>
+                </View>
+              </View>
+            </PressableScale>
           </View>
-        </View>
 
-        {/* Buttons */}
-        <TouchableOpacity
-          style={[styles.goProButton, purchasing && styles.buttonDisabled]}
+          {/* Lifetime plan */}
+          <PressableScale
+            onPress={() => setSelectedPlan("lifetime")}
+            style={[
+              styles.planCard,
+              selectedPlan === "lifetime"
+                ? styles.planCardSelected
+                : styles.planCardUnselected,
+            ]}
+          >
+            <View style={styles.planCardContent}>
+              <View style={styles.planLeft}>
+                <Text style={styles.planTitle}>Lifetime</Text>
+                <Text style={styles.planSubtext}>One-time purchase</Text>
+              </View>
+              <View style={styles.planRight}>
+                <Text style={styles.perMonth}>{lifetimePrice}</Text>
+              </View>
+            </View>
+          </PressableScale>
+        </Animated.View>
+
+        {/* Spacer to push footer down on larger screens */}
+        <View style={styles.flex} />
+      </ScrollView>
+
+      {/* Fixed footer */}
+      <Animated.View
+        entering={FadeInUp.duration(TIMING_CONFIG.entrance).delay(400)}
+        style={[styles.footer, { paddingBottom: Math.max(insets.bottom, SPACING.md) }]}
+      >
+        <Text style={styles.cancelText}>Cancel anytime</Text>
+
+        <PressableScale onPress={handleRestore} scaleDown={0.98}>
+          <Text style={styles.restoreText}>Restore purchases</Text>
+        </PressableScale>
+
+        <PressableScale
+          style={[styles.continueButton, purchasing && styles.buttonDisabled]}
           onPress={handlePurchase}
           disabled={purchasing}
+          haptic="Medium"
         >
           {purchasing ? (
-            <ActivityIndicator color="#ffffff" size="small" />
+            <ActivityIndicator color={COLORS.bg} size="small" />
           ) : (
-            <Text style={styles.goProText}>Start Free Trial</Text>
+            <Text style={styles.continueButtonText}>Start my change today</Text>
           )}
-        </TouchableOpacity>
+        </PressableScale>
 
-        {/* Legal Note */}
-        <Text style={styles.legalNote}>
-          By subscribing, you agree to our Terms of Service and Privacy Policy.
-          Subscription automatically renews unless cancelled.
+        <Text style={styles.legalText}>
+          By subscribing, you agree to our{" "}
+          <Text style={styles.legalLink} onPress={() => Linking.openURL(TERMS_URL)}>
+            Terms of Service
+          </Text>{" "}
+          and{" "}
+          <Text style={styles.legalLink} onPress={() => Linking.openURL(PRIVACY_URL)}>
+            Privacy Policy
+          </Text>
+          . Subscription automatically renews unless cancelled at least 24 hours
+          before the end of the current period.
         </Text>
-
-        <View style={styles.spacer} />
-      </View>
-    </SafeAreaView>
+      </Animated.View>
+    </View>
   );
 }
 
+// ── Styles ──────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#C5B5E8",
+    backgroundColor: COLORS.bg,
   },
-  headerContainer: {
-    paddingHorizontal: 32,
-    paddingTop: 20,
-    paddingBottom: 20,
-  },
-  navRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    marginHorizontal: -8, // Align icons visually with edge
-  },
-  navButton: {
-    padding: 8,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 32,
-    paddingBottom: 20,
-  },
-  unlockText: {
-    ...TEXT_STYLES.h2,
-    color: "#000000",
-    marginBottom: 4,
-  },
-  brandText: {
-    ...TEXT_STYLES.h0,
-    fontSize: 32,
-    color: "#000000",
-    marginBottom: 4,
-  },
-  nowText: {
-    ...TEXT_STYLES.h2,
-    color: "#000000",
-  },
-  featuresContainer: {
-    marginBottom: 0,
-  },
-  featureItem: {
+  header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
   },
-  checkmark: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#000000",
-    marginRight: 12,
+  headerSpacer: {
+    width: 28,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: SPACING.lg,
+    flexGrow: 1,
+    maxWidth: 500,
+    alignSelf: "center",
+    width: "100%",
+  },
+
+  // Icon hero
+  iconHero: {
+    height: 200,
+    marginBottom: SPACING.lg,
+    alignItems: "center",
     justifyContent: "center",
+  },
+  appIcon: {
+    width: 180,
+    height: 180,
+    borderRadius: 40,
+    borderCurve: "continuous" as const,
+  },
+
+  // Headline
+  headlineContainer: {
+    marginBottom: SPACING.xl,
+    paddingHorizontal: SPACING.sm,
+  },
+  headline: {
+    ...TYPE.heading,
+    color: COLORS.text,
+    textAlign: "center",
+  },
+  headlineAccent: {
+    color: COLORS.primary,
+  },
+
+  // Plan cards
+  cardWrapper: {
+    position: "relative",
+    marginBottom: SPACING.sm,
+  },
+  badgeContainer: {
+    position: "absolute",
+    top: -12,
+    right: SPACING.md,
+    zIndex: 1,
+  },
+  badge: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.pill,
+  },
+  badgeText: {
+    ...TYPE.caption,
+    fontSize: 11,
+    color: COLORS.bg,
+  },
+  planCard: {
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    borderCurve: "continuous" as const,
+  },
+  planCardSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryMuted,
+  },
+  planCardUnselected: {
+    borderColor: COLORS.glassBorder,
+    backgroundColor: COLORS.bgGlass,
+  },
+  planCardContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  checkmarkText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
+  planLeft: {
+    flex: 1,
   },
-  featureText: {
-    ...TEXT_STYLES.body,
-    fontSize: 16,
-    color: "#000000",
+  planRight: {
+    alignItems: "flex-end",
   },
-  pricingBox: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: "#000000",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#E0E0E0",
-    marginVertical: 20,
-  },
-  autoRenewText: {
-    ...TEXT_STYLES.h2,
-    fontSize: 24,
-    color: "#000000",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  trialText: {
-    ...TEXT_STYLES.h2,
-    fontSize: 24,
-    color: "#000000",
-    textAlign: "center",
-    marginBottom: 8,
+  planTitle: {
+    ...TYPE.subheading,
+    color: COLORS.text,
+    marginBottom: 2,
   },
   priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  originalPriceText: {
-    ...TEXT_STYLES.body,
-    fontSize: 14,
-    color: "#666666",
-    textDecorationLine: 'line-through',
-  },
-  priceText: {
-    ...TEXT_STYLES.h3,
-    fontSize: 14,
-    color: "#666666",
-  },
-  offerContainer: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    marginBottom: 0,
-    marginTop: 20,
-  },
-  oneTimeOfferText: {
-    ...TEXT_STYLES.h1, // Use h1 for boldness
-    fontFamily: "Nunito_900Black", // Extra bold
-    color: '#000000',
-    fontSize: 24, // Larger
-    marginBottom: 0,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  offerText: {
-    ...TEXT_STYLES.h1,
-    color: '#FFD700', // Gold
-    fontSize: 64, // Even bigger
-    lineHeight: 70,
-  },
-  goProButton: {
-    backgroundColor: "#000000",
-    paddingVertical: 18,
-    borderRadius: 24,
-    marginBottom: 12,
+    flexDirection: "row",
     alignItems: "center",
+    gap: SPACING.sm,
   },
-  goProText: {
-    ...TEXT_STYLES.h3,
-    color: "#FFFFFF",
+  originalPrice: {
+    ...TYPE.caption,
+    color: COLORS.textSecondary,
+    textDecorationLine: "line-through",
   },
-  skipButton: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 18,
-    borderRadius: 24,
-    marginBottom: 20,
+  discountedPrice: {
+    ...TYPE.caption,
+    color: COLORS.primary,
+  },
+  planSubtext: {
+    ...TYPE.caption,
+    color: COLORS.textSecondary,
+  },
+  perMonth: {
+    ...TYPE.subheading,
+    color: COLORS.text,
+  },
+  flex: {
+    flex: 1,
+    minHeight: SPACING.md,
+  },
+
+  // Footer
+  footer: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm,
+    gap: SPACING.sm,
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#000000",
+    maxWidth: 500,
+    alignSelf: "center",
+    width: "100%",
   },
-  skipText: {
-    ...TEXT_STYLES.h3,
-    color: "#000000",
+  cancelText: {
+    ...TYPE.caption,
+    color: COLORS.textSecondary,
+  },
+  restoreText: {
+    ...TYPE.caption,
+    color: COLORS.textSecondary,
+    textDecorationLine: "underline",
+  },
+  continueButton: {
+    backgroundColor: COLORS.text,
+    height: 56,
+    borderRadius: RADIUS.md,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  continueButtonText: {
+    ...TYPE.subheading,
+    color: COLORS.bg,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
-  spacer: {
-    flex: 1,
-  },
-  legalNote: {
+  legalText: {
+    ...TYPE.caption,
     fontSize: 10,
-    fontFamily: TEXT_STYLES.small.fontFamily,
-    color: "#666666",
-    textAlign: "center",
     lineHeight: 14,
+    color: COLORS.textMuted,
+    textAlign: "center",
+  },
+  legalLink: {
+    textDecorationLine: "underline",
   },
 });

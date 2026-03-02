@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import * as ExpoSplashScreen from "expo-splash-screen";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StatusBar, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Asset } from "expo-asset";
@@ -29,20 +29,28 @@ ExpoSplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back", gestureEnabled: false }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="landing" options={{ headerShown: false }} />
-      <Stack.Screen name="paywall" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="preview" options={{ headerShown: false }} />
-      <Stack.Screen name="info-chat" options={{ headerShown: false }} />
-      <Stack.Screen name="result" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding-flow" options={{ headerShown: false }} />
-      <Stack.Screen name="pre-paywall" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false, gestureEnabled: true, contentStyle: { backgroundColor: '#0F1218' } }}>
+      <Stack.Screen name="index" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="landing" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="paywall" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="onboarding-flow" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="pre-paywall" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="breathing" />
+      <Stack.Screen name="reality-check" />
+      <Stack.Screen name="craving-game" />
+      <Stack.Screen name="graphic-reality" />
+      <Stack.Screen name="pledge" />
+      <Stack.Screen name="more" />
+      <Stack.Screen name="share-progress" />
+      <Stack.Screen name="export-data" />
       <Stack.Screen
-        name="settings"
+        name="sos-modal"
         options={{
-          headerShown: false,
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          contentStyle: { backgroundColor: 'transparent' },
         }}
       />
     </Stack>
@@ -97,14 +105,8 @@ export default function RootLayout() {
     })();
   }, [refreshProStatus]);
 
-  // Hide splash as soon as fonts and assets are ready (or errored)
-  React.useEffect(() => {
-    if ((fontsLoaded || fontError) && assetsLoaded) {
-      ExpoSplashScreen.hideAsync().catch(console.error);
-    }
-  }, [fontsLoaded, fontError, assetsLoaded]);
-
   // Don't render anything until fonts and assets are loaded
+  // Native splash stays visible until index.tsx navigates and hides it
   if ((!fontsLoaded && !fontError) || !assetsLoaded) {
     return null;
   }
@@ -113,6 +115,7 @@ export default function RootLayout() {
     <ErrorBoundary>
       <SafeAreaProvider>
         <GestureHandlerRootView style={styles.container}>
+          <StatusBar barStyle="light-content" />
           <RootLayoutNav />
         </GestureHandlerRootView>
       </SafeAreaProvider>
