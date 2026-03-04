@@ -1,5 +1,0 @@
-# Supabase Edge Functions configuration
-# This file is used by the Supabase CLI to configure edge functions
-
-[functions.estimate-height]
-verify_jwt = true

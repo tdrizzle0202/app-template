@@ -14,7 +14,6 @@ import {
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { supabase } from "@/lib/supabase";
 import { initializeRevenueCat } from "@/lib/revenueCat";
 import { useProStatusStore } from "@/lib/proStatusStore";
 
@@ -80,14 +79,6 @@ export default function RootLayout() {
       try {
         // Preload onboarding images in parallel with other init
         const assetPreloadPromise = Asset.loadAsync(onboardingAssets);
-
-        // Anonymous auth if no session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          await supabase.auth.signInAnonymously();
-        }
 
         // RevenueCat init
         await initializeRevenueCat();
