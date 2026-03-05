@@ -18,20 +18,18 @@ import { COLORS, TYPE, FONTS } from '@/constants/theme';
 const RING_SIZE = 200;
 const DURATION = 4500;
 
+// ── Replace with your app's loading steps ────────────────
 const STEPS = [
-  'Analyzing your habits...',
-  'Building your timeline...',
-  'Personalizing strategies...',
+  'Analyzing your profile...',
+  'Building your plan...',
+  'Personalizing your experience...',
 ];
 
 export default function Loading() {
   const router = useRouter();
   const hapticInterval = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  // ── Ring progress 0 → 1 ──
   const ringProgress = useSharedValue(0);
-
-  // ── Count-up percentage ──
   const [displayPercent, setDisplayPercent] = useState(0);
 
   useAnimatedReaction(
@@ -41,27 +39,22 @@ export default function Loading() {
     },
   );
 
-  // ── Rotating subtitle ──
   const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
-    // Start ring fill
     ringProgress.value = withTiming(1, {
       duration: DURATION,
       easing: Easing.out(Easing.cubic),
     });
 
-    // Haptics
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     hapticInterval.current = setInterval(() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }, 300);
 
-    // Rotate subtitle text
     const stepTimer1 = setTimeout(() => setStepIndex(1), 1500);
     const stepTimer2 = setTimeout(() => setStepIndex(2), 3000);
 
-    // Navigate after ring completes
     const navTimeout = setTimeout(() => {
       router.replace('/onboarding/all-set');
     }, DURATION);
@@ -77,7 +70,6 @@ export default function Loading() {
   return (
     <ScreenWrapper scrollable={false}>
       <View style={styles.center}>
-        {/* Animated ring with percentage */}
         <Animated.View entering={FadeIn.duration(400)}>
           <RingLoader progress={ringProgress} size={RING_SIZE} strokeWidth={12}>
             <Text style={styles.percent}>{displayPercent}%</Text>
@@ -88,7 +80,7 @@ export default function Loading() {
           entering={FadeInUp.delay(200).duration(400)}
           style={styles.heading}
         >
-          Formulating your{'\n'}personal plan
+          Setting up your{'\n'}personal experience
         </Animated.Text>
 
         <Animated.Text

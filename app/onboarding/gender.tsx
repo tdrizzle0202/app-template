@@ -46,7 +46,7 @@ export default function Gender() {
         <PressableScale onPress={() => router.back()} scaleDown={0.9}>
           <ChevronLeft size={24} color={COLORS.textSecondary} />
         </PressableScale>
-        <SegmentedProgressBar totalSteps={11} currentStep={2} />
+        <SegmentedProgressBar totalSteps={5} currentStep={2} />
       </View>
 
       <View style={styles.content}>
@@ -71,7 +71,7 @@ export default function Gender() {
           title="Continue"
           onPress={() => {
             setGender(selected);
-            router.push('/onboarding/nicotine-type');
+            router.push('/onboarding/hear-about');
           }}
           disabled={!selected}
           style={styles.button}

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -39,14 +39,7 @@ import { useProStatusStore } from "@/lib/proStatusStore";
 
 const APP_ICON = require("@/assets/icon.png");
 const TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
-const PRIVACY_URL = "https://feinapp.netlify.app";
-
-// ── Helpers ─────────────────────────────────────────────
-function getQuitDate(): string {
-  const date = new Date();
-  date.setDate(date.getDate() + 90);
-  return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
-}
+const PRIVACY_URL = "https://example.com/privacy";
 
 type PlanType = "annual" | "lifetime";
 
@@ -61,8 +54,6 @@ export default function PaywallScreen() {
   const refreshProStatus = useProStatusStore((s) => s.refreshProStatus);
   const setProStatus = useProStatusStore((s) => s.setProStatus);
   const hasPro = useProStatusStore((s) => s.hasPro);
-
-  const quitDate = useMemo(() => getQuitDate(), []);
 
   useEffect(() => {
     loadPackages();
@@ -226,9 +217,9 @@ export default function PaywallScreen() {
           style={styles.headlineContainer}
         >
           <Text style={styles.headline}>
-            We'll help you{" "}
-            <Text style={styles.headlineAccent}>quit nicotine</Text> by{" "}
-            {quitDate}!
+            Unlock{" "}
+            <Text style={styles.headlineAccent}>full access</Text> to{" "}
+            everything
           </Text>
         </Animated.View>
 
@@ -314,7 +305,7 @@ export default function PaywallScreen() {
           {purchasing ? (
             <ActivityIndicator color={COLORS.bg} size="small" />
           ) : (
-            <Text style={styles.continueButtonText}>Start my change today</Text>
+            <Text style={styles.continueButtonText}>Continue</Text>
           )}
         </PressableScale>
 

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Fein",
-    "slug": "fein",
-    "scheme": "fein",
+    "name": "MyApp",
+    "slug": "myapp",
+    "scheme": "myapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,8 +14,8 @@
       "backgroundColor": "#000000"
     },
     "ios": {
-      "bundleIdentifier": "com.terrykim.puff.app",
-      "buildNumber": "6",
+      "bundleIdentifier": "com.yourname.myapp",
+      "buildNumber": "1",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -35,9 +35,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "47d658df-2c7c-4da2-98e7-7f58850eaa46"
+        "projectId": "YOUR_PROJECT_ID"
       }
     },
-    "owner": "0202terry"
+    "owner": "YOUR_OWNER"
   }
 }

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -23,12 +22,7 @@ import {
   Flame,
   Check,
   X,
-  HeartHandshake,
-  Wind,
-  RotateCcw,
   MoreHorizontal,
-  Timer,
-  Flag,
 } from 'lucide-react-native';
 import {
   COLORS,
@@ -38,31 +32,28 @@ import {
   RADIUS,
 } from '@/constants/theme';
 import { PressableScale, type HapticType } from '@/components/ui/PressableScale';
-import {
-  useUserStore,
-  getDaysSinceQuit,
-  getPhaseLabel,
-  getWeekStates,
-} from '@/store/useUserStore';
+import { useUserStore } from '@/store/useUserStore';
 
-// ── Brighter Glass Tokens ────────────────────────────────
+// ── Glass Tokens ────────────────────────────────────────
 const BRIGHT = {
   bg: '#0F1218',
   glass: 'rgba(255,255,255,0.09)',
   glassBorder: 'rgba(255,255,255,0.12)',
   glassTopEdge: 'rgba(255,255,255,0.18)',
-  glassFaint: 'rgba(255,255,255,0.04)',
 } as const;
 
 // ── Circle Progress Constants ────────────────────────────
 const RING_SIZE = 260;
-const MAX_DAYS = 90;
+const MAX_DAYS = 90; // Replace with your app's target
 
 // ── Week Labels ─────────────────────────────────────────
 const WEEK_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 type DayState = 'completed' | 'missed' | 'today' | 'future';
 
-// ── Today pulsing teal dot ───────────────────────────────
+// Mock week states — replace with real data
+const MOCK_WEEK: DayState[] = ['completed', 'completed', 'completed', 'today', 'future', 'future', 'future'];
+
+// ── Today pulsing dot ───────────────────────────────────
 function TodayPulse() {
   const pulseScale = useSharedValue(0.8);
 
@@ -157,14 +148,11 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // ── Store ──
   const name = useUserStore((s) => s.name);
-  const quitDate = useUserStore((s) => s.quitDate);
-  const relapses = useUserStore((s) => s.relapses);
-  const resetStreakAction = useUserStore((s) => s.resetStreak);
 
-  const daysSinceQuit = getDaysSinceQuit(quitDate);
-  const weekStates = getWeekStates(quitDate);
+  // ── Mock data — replace with real app state ──
+  const dayCount = 4;
+  const weekStates = MOCK_WEEK;
 
   // ── Count-up animation ──
   const [displayCount, setDisplayCount] = useState(0);
@@ -172,13 +160,13 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      count.value = withTiming(daysSinceQuit, {
+      count.value = withTiming(dayCount, {
         duration: 1200,
         easing: Easing.out(Easing.cubic),
       });
     }, 300);
     return () => clearTimeout(t);
-  }, [count, daysSinceQuit]);
+  }, [count, dayCount]);
 
   useAnimatedReaction(
     () => Math.round(count.value),
@@ -192,67 +180,13 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      ringProgress.value = withTiming(Math.min(daysSinceQuit / MAX_DAYS, 1), {
+      ringProgress.value = withTiming(Math.min(dayCount / MAX_DAYS, 1), {
         duration: 1500,
         easing: Easing.out(Easing.cubic),
       });
     }, 400);
     return () => clearTimeout(t);
-  }, [ringProgress, daysSinceQuit]);
-
-  // ── Live timer ──
-  const [elapsed, setElapsed] = useState({ h: 0, m: 0, s: 0 });
-
-  useEffect(() => {
-    const tick = () => {
-      if (!quitDate) return;
-      const diff = Date.now() - new Date(quitDate).getTime();
-      const total = Math.floor(diff / 1000);
-      setElapsed({
-        h: Math.floor(total / 3600),
-        m: Math.floor((total % 3600) / 60),
-        s: total % 60,
-      });
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [quitDate]);
-
-  // ── SOS pulse ──
-  const sosScale = useSharedValue(1);
-
-  useEffect(() => {
-    sosScale.value = withRepeat(
-      withTiming(1.015, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
-    );
-  }, [sosScale]);
-
-  const sosPulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: sosScale.value }],
-  }));
-
-  // ── Handlers ──
-  const handlePledge = useCallback(
-    () => router.push('/pledge' as any),
-    [router],
-  );
-  const handleBreathe = useCallback(
-    () => router.push('/breathing' as any),
-    [router],
-  );
-  const handleReset = useCallback(() => {
-    Alert.alert('Reset Streak', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Reset', style: 'destructive', onPress: () => resetStreakAction() },
-    ]);
-  }, [resetStreakAction]);
-  const handleMore = useCallback(
-    () => router.push('/more' as any),
-    [router],
-  );
+  }, [ringProgress, dayCount]);
 
   return (
     <View style={styles.safe}>
@@ -263,11 +197,11 @@ export default function HomeScreen() {
       >
         {/* 1. Top Bar */}
         <Animated.View entering={FadeIn.duration(300)} style={styles.topBar}>
-          <Text style={[TYPE.heading, { color: COLORS.text }]}>{name ? name.charAt(0).toUpperCase() + name.slice(1) : 'Fein'}</Text>
+          <Text style={[TYPE.heading, { color: COLORS.text }]}>{name ? name.charAt(0).toUpperCase() + name.slice(1) : 'Home'}</Text>
           <View style={styles.topRight}>
             <PressableScale style={styles.streakPill}>
               <Flame color={COLORS.accent} size={20} />
-              <Text style={styles.streakNum}>{daysSinceQuit}</Text>
+              <Text style={styles.streakNum}>{dayCount}</Text>
             </PressableScale>
           </View>
         </Animated.View>
@@ -284,9 +218,9 @@ export default function HomeScreen() {
           <Animated.View entering={FadeIn.delay(200).duration(600)}>
             <RingLoader progress={ringProgress} size={RING_SIZE}>
               <View style={styles.ringContent}>
-                <Text style={styles.ringLabel}>DAYS CLEAN</Text>
+                <Text style={styles.ringLabel}>DAY COUNT</Text>
                 <Text style={styles.ringNumber}>{displayCount}d</Text>
-                <Text style={styles.ringPhase}>{getPhaseLabel(quitDate)}</Text>
+                <Text style={styles.ringPhase}>PHASE</Text>
               </View>
             </RingLoader>
           </Animated.View>
@@ -296,59 +230,30 @@ export default function HomeScreen() {
             entering={FadeIn.delay(400).duration(400)}
             style={styles.statRow}
           >
-            {/* Relapses */}
             <View style={styles.statCard}>
-              <View style={styles.statHeader}>
-                <Flame color={COLORS.danger} size={14} />
-                <Text style={styles.statLabel}>RELAPSES</Text>
-              </View>
-              <Text style={styles.statValue}>{relapses}</Text>
+              <Text style={styles.statLabel}>STAT 1</Text>
+              <Text style={styles.statValue}>0</Text>
             </View>
 
-            {/* Streak (highlighted) */}
             <View style={[styles.statCard, styles.statCardActive]}>
-              <View style={styles.statHeader}>
-                <Timer color={COLORS.accent} size={14} />
-                <Text style={[styles.statLabel, { color: COLORS.accent }]}>STREAK</Text>
-              </View>
-              <Text style={styles.statValue}>
-                {Math.floor(elapsed.h / 24)}d {elapsed.h % 24}h {elapsed.m}m
-              </Text>
+              <Text style={[styles.statLabel, { color: COLORS.accent }]}>STAT 2</Text>
+              <Text style={styles.statValue}>0</Text>
             </View>
 
-            {/* Til Sober */}
             <View style={styles.statCard}>
-              <View style={styles.statHeader}>
-                <Flag color={COLORS.primary} size={14} />
-                <Text style={styles.statLabel}>TIL SOBER</Text>
-              </View>
-              <Text style={styles.statValue}>{Math.max(MAX_DAYS - daysSinceQuit, 0)}d</Text>
+              <Text style={styles.statLabel}>STAT 3</Text>
+              <Text style={styles.statValue}>0</Text>
             </View>
           </Animated.View>
         </View>
 
         {/* 4. Action Buttons */}
         <View style={styles.actionRow}>
-          <ActionButton icon={HeartHandshake} label="Pledge" onPress={handlePledge} index={0} />
-          <ActionButton icon={Wind} label="Breathe" onPress={handleBreathe} index={1} />
-          <ActionButton icon={RotateCcw} label="Reset" onPress={handleReset} index={2} haptic="Heavy" />
-          <ActionButton icon={MoreHorizontal} label="More" onPress={handleMore} index={3} />
+          <ActionButton icon={MoreHorizontal} label="Action 1" onPress={() => {}} index={0} />
+          <ActionButton icon={MoreHorizontal} label="Action 2" onPress={() => {}} index={1} />
+          <ActionButton icon={MoreHorizontal} label="Action 3" onPress={() => {}} index={2} />
+          <ActionButton icon={MoreHorizontal} label="More" onPress={() => {}} index={3} />
         </View>
-
-        {/* 5. SOS / I'm Feining */}
-        <Animated.View entering={FadeIn.delay(600).duration(400)}>
-          <Animated.View style={sosPulseStyle}>
-            <PressableScale
-              onPress={() => router.push('/sos-modal' as any)}
-              scaleDown={0.96}
-              haptic="Heavy"
-            >
-              <View style={styles.sosBtn}>
-                <Text style={styles.sosTxt}>I'm Feining</Text>
-              </View>
-            </PressableScale>
-          </Animated.View>
-        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -486,11 +391,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(246,173,85,0.35)',
     backgroundColor: 'rgba(246,173,85,0.08)',
   },
-  statHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
   statLabel: {
     fontSize: 11,
     fontFamily: FONTS.bold,
@@ -534,27 +434,5 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     marginTop: 6,
     textAlign: 'center',
-  },
-
-  // SOS button
-  sosBtn: {
-    marginTop: SPACING.lg,
-    height: 56,
-    borderRadius: RADIUS.md,
-    borderCurve: 'continuous',
-    backgroundColor: COLORS.danger,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: COLORS.danger,
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 8,
-  },
-  sosTxt: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: FONTS.bold,
-    color: '#07090E',
   },
 });

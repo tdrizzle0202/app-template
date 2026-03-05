@@ -18,7 +18,7 @@ export default function RateUs() {
         await StoreReview.requestReview();
       }
     } catch {}
-    setTimeout(() => router.push('/onboarding/infographic'), 1500);
+    setTimeout(() => router.push('/onboarding/loading'), 1500);
   };
 
   return (
@@ -27,25 +27,25 @@ export default function RateUs() {
         <PressableScale onPress={() => router.back()} scaleDown={0.9}>
           <ChevronLeft size={24} color={COLORS.textSecondary} />
         </PressableScale>
-        <SegmentedProgressBar totalSteps={11} currentStep={10} />
+        <SegmentedProgressBar totalSteps={5} currentStep={4} />
       </View>
 
       <View style={styles.center}>
         <Text style={styles.star}>{'\u2B50'}</Text>
-        <Text style={styles.heading}>Enjoying Fein so far?</Text>
+        <Text style={styles.heading}>Enjoying the app so far?</Text>
         <Text style={styles.subtitle}>A quick rating helps others discover us</Text>
       </View>
 
       <View style={styles.bottom}>
         <Button
-          title={'\u2B50  Rate Fein'}
+          title={'\u2B50  Rate Us'}
           onPress={handleRate}
           style={styles.button}
         />
         <Button
           title="Maybe later"
           variant="glass"
-          onPress={() => router.push('/onboarding/infographic')}
+          onPress={() => router.push('/onboarding/loading')}
           style={styles.button}
         />
       </View>

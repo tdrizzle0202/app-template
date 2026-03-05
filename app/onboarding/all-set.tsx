@@ -6,7 +6,7 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated'
 import { TypewriterText } from '@/components/ui/TypewriterText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, Cigarette, DollarSign, Heart } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Cloud, Sprout } from '@/components/icons/AllSetIllustrations';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
@@ -19,17 +19,10 @@ export default function AllSet() {
   const store = useOnboardingStore();
   const displayName = store.name || '';
 
-
   const handleStart = async () => {
     useUserStore.getState().completeOnboarding({
       name: store.name,
       gender: store.gender,
-      nicotineTypes: store.nicotineTypes,
-      usageDuration: store.usageDuration,
-      toleranceWindow: store.toleranceWindow,
-      quitAttempts: store.quitAttempts,
-      triggers: store.triggers,
-      monthlySpend: store.monthlySpend,
       referralSource: store.referralSource,
     });
     await AsyncStorage.setItem('hasSeenOnboarding', 'true');
@@ -66,7 +59,7 @@ export default function AllSet() {
             style={styles.mascotContainer}
           >
             <View style={styles.mascotCircle}>
-              <Text style={styles.mascotEmoji}>{'\u{1F4AA}'}</Text>
+              <Text style={styles.mascotEmoji}>{'\u{1F389}'}</Text>
             </View>
           </Animated.View>
 
@@ -80,42 +73,18 @@ export default function AllSet() {
             </View>
           </View>
 
-          {/* Motivational title */}
+          {/* Title */}
           <Animated.View entering={FadeInDown.delay(400).duration(500)}>
             <TypewriterText
               text={displayName
-                ? `It\u2019s time to finally quit, ${displayName}.`
-                : "It\u2019s time to finally quit."}
+                ? `You're all set, ${displayName}!`
+                : "You're all set!"}
               style={styles.title}
-              highlightWord="finally"
+              highlightWord="all"
               highlightStyle={styles.titleHighlight}
               speed={25}
               delay={600}
             />
-          </Animated.View>
-
-          {/* Goals row */}
-          <Animated.View entering={FadeInUp.delay(600).duration(500)} style={styles.goalsRow}>
-            <View style={styles.goalPill}>
-              <View style={styles.goalIcon}>
-                <Cigarette size={16} color="#48BB78" strokeWidth={2.5} />
-              </View>
-              <Text style={styles.goalText}>Quit Nicotine</Text>
-            </View>
-
-            <View style={styles.goalPill}>
-              <View style={styles.goalIcon}>
-                <DollarSign size={16} color="#48BB78" strokeWidth={2.5} />
-              </View>
-              <Text style={styles.goalText}>Save Money</Text>
-            </View>
-
-            <View style={styles.goalPill}>
-              <View style={styles.goalIcon}>
-                <Heart size={16} color="#48BB78" strokeWidth={2.5} />
-              </View>
-              <Text style={styles.goalText}>Improve Health</Text>
-            </View>
           </Animated.View>
 
           {/* Divider */}
@@ -135,7 +104,7 @@ export default function AllSet() {
         {/* CTA */}
         <Animated.View entering={FadeInUp.delay(1200).duration(500)} style={styles.bottom}>
           <PressableScale onPress={handleStart} style={styles.button} haptic="Light">
-            <Text style={styles.buttonText}>Start My Fein Journey</Text>
+            <Text style={styles.buttonText}>Let's Go</Text>
           </PressableScale>
         </Animated.View>
       </View>
@@ -152,7 +121,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
   },
 
-  // ── Clouds ──────────────────────────────────────────
   cloudLayer: {
     position: 'absolute',
     top: 0,
@@ -176,14 +144,12 @@ const styles = StyleSheet.create({
     left: '35%' as unknown as number,
   },
 
-  // ── Content ─────────────────────────────────────────
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  // ── Mascot ──────────────────────────────────────────
   mascotContainer: {
     marginBottom: SPACING.md,
   },
@@ -199,7 +165,6 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
 
-  // ── Sprouts ─────────────────────────────────────────
   sproutRow: {
     flexDirection: 'row',
     width: '100%',
@@ -214,7 +179,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '15deg' }],
   },
 
-  // ── Title ───────────────────────────────────────────
   title: {
     fontSize: 32,
     lineHeight: 40,
@@ -229,41 +193,6 @@ const styles = StyleSheet.create({
     color: '#FF4444',
   },
 
-  // ── Goals ───────────────────────────────────────────
-  goalsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 10,
-    marginBottom: SPACING.lg,
-  },
-  goalPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: RADIUS.pill,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  goalIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  goalText: {
-    fontSize: 13,
-    fontFamily: FONTS.semibold,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-
-  // ── Divider ─────────────────────────────────────────
   divider: {
     width: '60%',
     height: 1,
@@ -271,7 +200,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
 
-  // ── Checkmark ───────────────────────────────────────
   checkContainer: {
     marginBottom: SPACING.md,
   },
@@ -289,7 +217,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  // ── CTA ─────────────────────────────────────────────
   bottom: {
     paddingBottom: SPACING.md,
   },

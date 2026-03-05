@@ -1,4 +1,3 @@
-// Force router refresh - updated
 import React, { useState, useEffect, useRef } from "react";
 import {
     StyleSheet,
@@ -8,32 +7,27 @@ import {
     Easing,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING, FONTS, TYPE } from "@/constants/theme";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { LinearGradient } from "expo-linear-gradient";
 
+// ── Replace with your app's onboarding slides ───────────
 const SLIDES = [
     {
         id: 1,
-        text: "Find a Full Body Image",
-        image: require("../assets/onboarding/preview_image.png"),
-        type: "image",
+        text: "Step One Headline",
+        type: "text",
     },
     {
         id: 2,
-        text: "Identify the Person",
-        image: require("../assets/onboarding/preview_image.png"),
-        type: "image",
+        text: "Step Two Headline",
+        type: "text",
     },
     {
         id: 3,
-        text: "Share the Result!",
-        image: require("../assets/onboarding/preview_image.png"),
-        type: "image",
-        showResultPill: true,
+        text: "Step Three Headline",
+        type: "text",
     },
 ];
 
@@ -45,13 +39,11 @@ const AnimatedText = ({ text, trigger }: { text: string; trigger: number }) => {
         const chars = text.split("");
         setLetters(chars);
 
-        // Reset animations
         animations.length = 0;
         chars.forEach(() => {
             animations.push(new Animated.Value(0));
         });
 
-        // Staggered animation
         const timingAnimations = chars.map((_, index) => {
             return Animated.timing(animations[index], {
                 toValue: 1,
@@ -87,83 +79,6 @@ const AnimatedText = ({ text, trigger }: { text: string; trigger: number }) => {
                 </Animated.Text>
             ))}
         </View>
-    );
-};
-
-const PillOverlay = () => {
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(20)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 400,
-                useNativeDriver: true,
-            }),
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                useNativeDriver: true,
-                friction: 8,
-            }),
-        ]).start();
-    }, []);
-
-    return (
-        <Animated.View
-            style={[
-                styles.pillContainer,
-                {
-                    opacity: fadeAnim,
-                    transform: [{ translateY: slideAnim }],
-                },
-            ]}
-        >
-            <View style={styles.pill}>
-                <Text style={styles.pillText}>Guy on the right</Text>
-            </View>
-        </Animated.View>
-    );
-};
-
-const ResultPill = () => {
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(20)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 400,
-                useNativeDriver: true,
-            }),
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                useNativeDriver: true,
-                friction: 8,
-            }),
-        ]).start();
-    }, []);
-
-    return (
-        <Animated.View
-            style={[
-                styles.resultPillContainer,
-                {
-                    opacity: fadeAnim,
-                    transform: [{ translateY: slideAnim }],
-                },
-            ]}
-        >
-            <View style={styles.resultPill}>
-                <View style={styles.resultInfoRow}>
-                    <Text style={styles.resultName} numberOfLines={1} ellipsizeMode="tail">Isaac</Text>
-                    <View style={styles.resultHeightContainer}>
-                        <Text style={styles.resultHeight}>6'3</Text>
-                    </View>
-                </View>
-            </View>
-        </Animated.View>
     );
 };
 
@@ -223,21 +138,9 @@ export default function OnboardingScreen() {
 
             {/* Content */}
             <View style={styles.content}>
+                {/* Image area — add your onboarding images here */}
                 <View style={styles.imageContainer}>
-                    <Image
-                        source={currentSlide.image}
-                        style={styles.image}
-                        contentFit="cover"
-                        transition={300}
-                    />
-
-                    {currentIndex === 1 && (
-                        <PillOverlay />
-                    )}
-
-                    {currentSlide.showResultPill && (
-                        <ResultPill />
-                    )}
+                    <Text style={styles.placeholderText}>Slide {currentSlide.id} Image</Text>
                 </View>
 
                 <View style={styles.textWrapper}>
@@ -315,17 +218,19 @@ const styles = StyleSheet.create({
         overflow: "hidden",
         marginBottom: SPACING.xl,
         position: "relative",
-        backgroundColor: "#F5F5F7",
+        backgroundColor: "#E8E8ED",
+        alignItems: "center",
+        justifyContent: "center",
     },
-    image: {
-        width: "100%",
-        height: "100%",
+    placeholderText: {
+        fontSize: 16,
+        color: "#999",
     },
     textWrapper: {
         width: "100%",
         alignItems: "center",
         marginBottom: SPACING.xl,
-        height: 80, // Fixed height to prevent jumping
+        height: 80,
         justifyContent: "center",
     },
     textContainer: {
@@ -354,75 +259,5 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontFamily: "Nunito_600SemiBold",
         color: COLORS.white,
-    },
-    pillContainer: {
-        position: "absolute",
-        bottom: 20,
-        left: 0,
-        right: 0,
-        alignItems: "center",
-    },
-    resultPillContainer: {
-        position: "absolute",
-        bottom: 20,
-        left: 20,
-        right: 20,
-        alignItems: "center",
-    },
-    pill: {
-        backgroundColor: COLORS.white,
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 8,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    pillText: {
-        fontSize: 16,
-        fontFamily: "Nunito_800ExtraBold",
-        color: COLORS.black,
-    },
-    resultPill: {
-        backgroundColor: COLORS.white,
-        padding: 16,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: COLORS.black,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-        width: '100%',
-    },
-    resultInfoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-    },
-    resultName: {
-        flex: 1,
-        fontSize: 32,
-        fontFamily: FONTS.bold,
-        color: COLORS.black,
-    },
-    resultHeightContainer: {
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-    },
-    resultHeight: {
-        fontSize: 32,
-        fontFamily: FONTS.bold,
-        color: COLORS.black,
     },
 });

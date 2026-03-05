@@ -3,8 +3,6 @@ import { StyleSheet, Text, View, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
   FadeIn,
-  FadeInUp,
-  FadeInDown,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
@@ -29,7 +27,6 @@ function Cursor({ visible }: { visible: boolean }) {
       opacity.value = withTiming(0, { duration: 300 });
       return;
     }
-    // Blink loop
     const blink = () => {
       opacity.value = withSequence(
         withTiming(1, { duration: 400 }),
@@ -53,23 +50,21 @@ function Cursor({ visible }: { visible: boolean }) {
 // ── Main Screen ───────────────────────────────────────────
 export default function Welcome() {
   const router = useRouter();
-  const [phase, setPhase] = useState(0); // 0=logo, 1=typing title, 2=typing subtitle, 3=show rest
+  const [phase, setPhase] = useState(0);
 
-  // Phase progression
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 400);   // Start title typewriter
-    const t2 = setTimeout(() => setPhase(2), 900);   // Start subtitle typewriter
+    const t1 = setTimeout(() => setPhase(1), 400);
+    const t2 = setTimeout(() => setPhase(2), 900);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const title = useTypewriter('Welcome!', 35, phase >= 1 ? 0 : 99999);
   const subtitle = useTypewriter(
-    "Your journey to quitting\nnicotine starts right here.",
+    "Let's get you set up\nin just a few steps.",
     20,
     phase >= 2 ? 0 : 99999,
   );
 
-  // Show button + stars once subtitle is done
   useEffect(() => {
     if (subtitle.done && phase < 3) {
       setPhase(3);
@@ -79,7 +74,6 @@ export default function Welcome() {
     }
   }, [subtitle.done]);
 
-  // Button entrance animation
   const buttonOpacity = useSharedValue(0);
   const buttonTranslateY = useSharedValue(30);
 
@@ -103,22 +97,20 @@ export default function Welcome() {
           entering={FadeIn.duration(600)}
           style={styles.logoContainer}
         >
-          <Text style={styles.logo}>FEIN</Text>
+          <Text style={styles.logo}>APP</Text>
           <View style={styles.logoDot} />
         </Animated.View>
 
         {/* Content */}
         <View style={styles.content}>
-          {/* Title with typewriter */}
           <View style={styles.titleRow}>
             <Text style={styles.title}>{title.displayed}</Text>
             {phase >= 1 && !title.done && <Cursor visible />}
           </View>
 
-          {/* Subtitle - invisible placeholder always reserves space */}
           <View style={styles.subtitleContainer}>
             <Text style={[styles.subtitle, { opacity: 0 }]}>
-              {"Your journey to quitting\nnicotine starts right here."}
+              {"Let's get you set up\nin just a few steps."}
             </Text>
             {phase >= 2 && (
               <View style={StyleSheet.absoluteFill}>
@@ -129,19 +121,13 @@ export default function Welcome() {
               </View>
             )}
           </View>
-
-          {/* Rating - appears with button */}
-          <View style={[styles.ratingRow, { opacity: phase >= 3 ? 1 : 0 }]}>
-            <Text style={styles.ratingStars}>⭐⭐⭐⭐⭐</Text>
-            <Text style={styles.ratingText}>#1 Science-Based Quitting App</Text>
-          </View>
         </View>
 
         {/* Bottom section */}
         <Animated.View style={[styles.bottom, buttonAnimStyle]}>
           <Button
-            title="Start Quiz"
-            onPress={() => router.push('/onboarding/fein-definition')}
+            title="Get Started"
+            onPress={() => router.push('/onboarding/name')}
             style={styles.button}
           />
         </Animated.View>
@@ -210,17 +196,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     marginLeft: 2,
     borderRadius: 1,
-  },
-  ratingRow: {
-    marginTop: SPACING.xl,
-    gap: SPACING.xs,
-  },
-  ratingStars: {
-    fontSize: 22,
-  },
-  ratingText: {
-    ...TYPE.caption,
-    color: COLORS.textSecondary,
   },
   bottom: {
     paddingBottom: SPACING.md,

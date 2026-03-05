@@ -2,11 +2,10 @@ import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { COLORS, SPACING, FONTS } from "@/constants/theme";
+import { COLORS, SPACING } from "@/constants/theme";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function PrePaywallScreen() {
     const handleContinue = () => {
@@ -18,17 +17,16 @@ export default function PrePaywallScreen() {
             <View style={styles.content}>
                 <View style={styles.headerContainer}>
                     <Text style={styles.headerText}>
-                        Try <Text style={styles.highlightText}>Fein</Text> for <Text style={styles.highlightText}>FREE</Text>
+                        Try <Text style={styles.highlightText}>Pro</Text> for <Text style={styles.highlightText}>FREE</Text>
                     </Text>
                 </View>
 
                 <View style={styles.phoneContainer}>
+                    {/* Add your app screenshot here */}
                     <View style={styles.phoneFrame}>
-                        <Image
-                            source={require("../assets/onboarding/paywall_preview.jpg")}
-                            style={styles.screenshot}
-                            contentFit="cover"
-                        />
+                        <View style={styles.screenshotPlaceholder}>
+                            <Text style={styles.placeholderText}>App Screenshot</Text>
+                        </View>
                     </View>
                 </View>
 
@@ -47,7 +45,7 @@ export default function PrePaywallScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#C5B5E8", // Purple from paywall
+        backgroundColor: "#C5B5E8",
     },
     content: {
         flex: 1,
@@ -59,17 +57,16 @@ const styles = StyleSheet.create({
     headerContainer: {
         marginTop: SPACING.xl,
         alignItems: "center",
-        zIndex: 10, // Ensure text is above if there's any overlap (though layout should prevent it)
     },
     headerText: {
-        fontSize: 32, // Slightly larger for better impact with shorter text
+        fontSize: 32,
         fontFamily: "Nunito_700Bold",
         color: COLORS.white,
         textAlign: "center",
         lineHeight: 40,
     },
     highlightText: {
-        color: "#FFD700", // Gold/Yellow color
+        color: "#FFD700",
         fontFamily: "Nunito_800ExtraBold",
     },
     phoneContainer: {
@@ -77,14 +74,14 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         width: "100%",
-        marginVertical: SPACING.md, // Reduced margin
+        marginVertical: SPACING.md,
     },
     phoneFrame: {
-        width: SCREEN_WIDTH * 0.55, // Reduced from 0.7
+        width: SCREEN_WIDTH * 0.55,
         aspectRatio: 9 / 19.5,
         backgroundColor: "#000",
-        borderRadius: 30, // Adjusted for smaller size
-        borderWidth: 6, // Adjusted for smaller size
+        borderRadius: 30,
+        borderWidth: 6,
         borderColor: "#333",
         overflow: "hidden",
         shadowColor: "#000",
@@ -96,9 +93,15 @@ const styles = StyleSheet.create({
         shadowRadius: 15,
         elevation: 8,
     },
-    screenshot: {
-        width: "100%",
-        height: "100%",
+    screenshotPlaceholder: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#1a1a2e",
+    },
+    placeholderText: {
+        color: "#666",
+        fontSize: 14,
     },
     continueButton: {
         backgroundColor: COLORS.white,

@@ -24,46 +24,18 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { COLORS, TYPE, SPACING, RADIUS } from '@/constants/theme';
-import {
-  useUserStore,
-  getDaysSinceQuit,
-  getHoursSinceQuit,
-  getDailySpend,
-  getMoneySaved,
-  getBrainRewirePercent,
-} from '@/store/useUserStore';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+// ── Replace with your app's milestones ──────────────────
 const MOCK_MILESTONES = [
-  { id: '1', title: 'Heart rate normalizes', time: '20 min', icon: '❤️', hoursRequired: 0.33, detail: 'Your heart rate and blood pressure have returned to normal.' },
-  { id: '2', title: 'Carbon monoxide drops', time: '8 hrs', icon: '🫁', hoursRequired: 8, detail: 'CO levels in your blood have dropped to normal.' },
-  { id: '3', title: 'Nicotine leaves blood', time: '2 days', icon: '🩸', hoursRequired: 48, detail: 'All nicotine has been flushed from your bloodstream.' },
-  { id: '4', title: 'Taste improves', time: '2 days', icon: '👅', hoursRequired: 48, detail: 'Nerve endings regrowing. Food tastes better already.' },
-  { id: '5', title: 'Breathing easier', time: '3 days', icon: '🌬️', hoursRequired: 72, detail: 'Bronchial tubes relaxing. You can breathe deeper.' },
-  { id: '6', title: 'Energy increases', time: '1 week', icon: '⚡', hoursRequired: 168, detail: 'Your body produces more energy without fighting toxins.' },
-  { id: '7', title: 'Circulation improves', time: '2 weeks', icon: '🔄', hoursRequired: 336, detail: 'Blood flows more freely throughout your body.' },
-  { id: '8', title: 'Lung function up 30%', time: '1 month', icon: '💨', hoursRequired: 720, detail: 'Your lungs are healing and working much better.' },
-  { id: '9', title: 'Coughing decreases', time: '3 months', icon: '🤧', hoursRequired: 2160, detail: 'Cilia regrown, clearing mucus naturally.' },
-  { id: '10', title: 'Heart disease risk halves', time: '1 year', icon: '🫀', hoursRequired: 8760, detail: 'Your risk is now half that of a smoker.' },
-];
-
-const MOCK_TRIGGERS = [
-  { emoji: '😰', label: 'Stress', count: 8, tip: 'Try the breathing exercise next time' },
-  { emoji: '🍻', label: 'Social', count: 5, tip: 'Have a go-to drink alternative ready' },
-  { emoji: '😴', label: 'Boredom', count: 4, tip: 'Keep your hands busy — try the pop game' },
-  { emoji: '☕', label: 'Morning', count: 3, tip: 'Replace the ritual with something new' },
-];
-
-const REWARD_IDEAS = [
-  { emoji: '☕', item: 'fancy coffees', cost: 6 },
-  { emoji: '🎬', item: 'movie tickets', cost: 15 },
-  { emoji: '🍕', item: 'pizza nights', cost: 20 },
-  { emoji: '🎧', item: 'month of Spotify', cost: 11 },
-  { emoji: '👟', item: 'new shoes', cost: 80 },
-  { emoji: '✈️', item: 'weekend trip', cost: 200 },
+  { id: '1', title: 'First milestone', time: '1 day', icon: '1', hoursRequired: 24, detail: 'You reached your first milestone.' },
+  { id: '2', title: 'Second milestone', time: '3 days', icon: '2', hoursRequired: 72, detail: 'You reached your second milestone.' },
+  { id: '3', title: 'Third milestone', time: '1 week', icon: '3', hoursRequired: 168, detail: 'You reached your third milestone.' },
+  { id: '4', title: 'Fourth milestone', time: '2 weeks', icon: '4', hoursRequired: 336, detail: 'You reached your fourth milestone.' },
+  { id: '5', title: 'Fifth milestone', time: '1 month', icon: '5', hoursRequired: 720, detail: 'You reached your fifth milestone.' },
 ];
 
 // ── Animated Counter ─────────────────────────────────────
@@ -184,7 +156,7 @@ function CircularProgress({ percent, daysLeft }: { percent: number; daysLeft: nu
                 style={[TYPE.heading, { color: COLORS.primary }]}
               />
               <Text style={[TYPE.caption, { color: COLORS.textSecondary }]}>
-                rewired
+                progress
               </Text>
             </Animated.View>
           )}
@@ -271,7 +243,7 @@ function MilestoneCard({
                   { color: COLORS.textSecondary, lineHeight: 18 },
                 ]}
               >
-                {isUnlocked ? '✓ ' : '⏳ '}
+                {isUnlocked ? 'Done ' : 'Pending '}
                 {milestone.detail}
               </Text>
             </View>
@@ -282,102 +254,21 @@ function MilestoneCard({
   );
 }
 
-// ── Trigger Pill ─────────────────────────────────────────
-function TriggerPill({ trigger }: { trigger: (typeof MOCK_TRIGGERS)[number] }) {
-  const [showTip, setShowTip] = useState(false);
-
-  return (
-    <View>
-      <PressableScale
-        onPress={() => setShowTip((s) => !s)}
-        scaleDown={0.95}
-        style={[
-          styles.triggerPill,
-          showTip && styles.triggerPillActive,
-        ]}
-      >
-        <Text style={[TYPE.caption, { color: COLORS.text }]}>
-          {trigger.emoji} {trigger.label} ({trigger.count})
-        </Text>
-      </PressableScale>
-      {showTip && (
-        <Animated.View entering={FadeIn.duration(200)} style={styles.triggerTip}>
-          <Text
-            style={[TYPE.caption, { color: COLORS.textSecondary, fontSize: 11 }]}
-          >
-            💡 {trigger.tip}
-          </Text>
-        </Animated.View>
-      )}
-    </View>
-  );
-}
-
-// ── Reward Row ───────────────────────────────────────────
-function RewardRow({ moneySaved }: { moneySaved: number }) {
-  const affordable = REWARD_IDEAS.filter((r) => moneySaved >= r.cost);
-  const nextGoal = REWARD_IDEAS.find((r) => moneySaved < r.cost);
-
-  return (
-    <View style={{ gap: SPACING.sm }}>
-      {affordable.length > 0 && (
-        <View>
-          <Text
-            style={[
-              TYPE.caption,
-              { color: COLORS.textSecondary, marginBottom: 6 },
-            ]}
-          >
-            You could buy
-          </Text>
-          <View style={styles.rewardRow}>
-            {affordable.map((r) => (
-              <View key={r.item} style={styles.rewardChip}>
-                <Text style={{ fontSize: 16 }}>{r.emoji}</Text>
-                <Text style={[TYPE.caption, { color: COLORS.text }]}>
-                  {Math.floor(moneySaved / r.cost)}x {r.item}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-      {nextGoal && (
-        <View style={styles.nextGoalBox}>
-          <Text style={[TYPE.caption, { color: COLORS.textSecondary }]}>
-            ${nextGoal.cost - moneySaved} more until {nextGoal.emoji}{' '}
-            {nextGoal.item}
-          </Text>
-          <View style={styles.goalProgress}>
-            <View
-              style={[
-                styles.goalFill,
-                { width: `${(moneySaved / nextGoal.cost) * 100}%` },
-              ]}
-            />
-          </View>
-        </View>
-      )}
-    </View>
-  );
-}
-
 // ── Calendar ─────────────────────────────────────────────
-function StreakCalendar({ quitDate }: { quitDate: string | null }) {
+function StreakCalendar() {
   const { width: screenWidth } = useWindowDimensions();
   const cellWidth = (screenWidth - 40 - 40) / 7;
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
   const today = now.getDate();
-  const quitDateObj = quitDate ? new Date(quitDate) : null;
 
   const calendarDays = useMemo(() => {
     const firstDayOfWeek = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days: {
       day: number;
-      type: 'empty' | 'clean' | 'today' | 'future' | 'before';
+      type: 'empty' | 'clean' | 'today' | 'future';
     }[] = [];
 
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -388,11 +279,9 @@ function StreakCalendar({ quitDate }: { quitDate: string | null }) {
       const date = new Date(year, month, d);
       const isToday = d === today;
       const isFuture = date > now;
-      const isBeforeQuit = quitDateObj ? date < quitDateObj : true;
 
       if (isToday) days.push({ day: d, type: 'today' });
       else if (isFuture) days.push({ day: d, type: 'future' });
-      else if (isBeforeQuit) days.push({ day: d, type: 'before' });
       else days.push({ day: d, type: 'clean' });
     }
 
@@ -428,7 +317,6 @@ function StreakCalendar({ quitDate }: { quitDate: string | null }) {
           const isClean = cell.type === 'clean';
           const isToday = cell.type === 'today';
           const isFuture = cell.type === 'future';
-          const isBefore = cell.type === 'before';
 
           return (
             <View
@@ -447,7 +335,7 @@ function StreakCalendar({ quitDate }: { quitDate: string | null }) {
                     color:
                       isClean || isToday
                         ? '#fff'
-                        : isFuture || isBefore
+                        : isFuture
                           ? COLORS.textMuted
                           : COLORS.text,
                   },
@@ -465,17 +353,13 @@ function StreakCalendar({ quitDate }: { quitDate: string | null }) {
 
 // ── Screen ───────────────────────────────────────────────
 export default function ProgressScreen() {
-  const quitDate = useUserStore((s) => s.quitDate);
-  const monthlySpend = useUserStore((s) => s.monthlySpend);
-
-  const daysSinceQuit = getDaysSinceQuit(quitDate);
-  const hoursSinceQuit = getHoursSinceQuit(quitDate);
-  const dailySpend = getDailySpend(monthlySpend);
-  const moneySaved = getMoneySaved(quitDate, monthlySpend);
-  const brainRewirePercent = getBrainRewirePercent(quitDate);
+  // Replace with real app data
+  const mockPercent = 25;
+  const mockDaysLeft = 67;
+  const mockHours = 96;
 
   const firstLockedIndex = MOCK_MILESTONES.findIndex(
-    (m) => m.hoursRequired > hoursSinceQuit,
+    (m) => m.hoursRequired > mockHours,
   );
 
   return (
@@ -487,7 +371,7 @@ export default function ProgressScreen() {
 
         <View style={{ height: SPACING.lg }} />
 
-        {/* ── Brain Rewiring Ring ── */}
+        {/* ── Progress Ring ── */}
         <GlassCard>
           <Text
             style={[
@@ -495,10 +379,10 @@ export default function ProgressScreen() {
               { color: COLORS.text, textAlign: 'center' },
             ]}
           >
-            Brain Rewiring
+            Overall Progress
           </Text>
           <View style={{ height: SPACING.md }} />
-          <CircularProgress percent={brainRewirePercent} daysLeft={Math.max(90 - daysSinceQuit, 0)} />
+          <CircularProgress percent={mockPercent} daysLeft={mockDaysLeft} />
           <View style={{ height: SPACING.sm }} />
           <Text
             style={[
@@ -506,15 +390,15 @@ export default function ProgressScreen() {
               { color: COLORS.textSecondary, textAlign: 'center' },
             ]}
           >
-            Your brain is rewiring nicotine pathways. Full recovery ~90 days.
+            Replace with your app's progress description.
           </Text>
         </GlassCard>
 
         <View style={{ height: SPACING.md }} />
 
-        {/* ── Health Milestones ── */}
+        {/* ── Milestones ── */}
         <Text style={[TYPE.subheading, { color: COLORS.text }]}>
-          Health Milestones
+          Milestones
         </Text>
         <View style={{ height: SPACING.xs }} />
         <Text style={[TYPE.caption, { color: COLORS.textMuted }]}>
@@ -523,7 +407,7 @@ export default function ProgressScreen() {
         <View style={{ height: SPACING.sm }} />
         <View style={{ gap: 10 }}>
           {MOCK_MILESTONES.map((milestone, index) => {
-            const isUnlocked = milestone.hoursRequired <= hoursSinceQuit;
+            const isUnlocked = milestone.hoursRequired <= mockHours;
             const isNext = index === firstLockedIndex;
             return (
               <MilestoneCard
@@ -539,67 +423,19 @@ export default function ProgressScreen() {
 
         <View style={{ height: SPACING.md }} />
 
-        {/* ── Money Saved ── */}
+        {/* ── Stats ── */}
         <Text style={[TYPE.subheading, { color: COLORS.text }]}>
-          Money Saved
-        </Text>
-        <View style={{ height: SPACING.sm }} />
-        <GlassCard>
-          <AnimatedCounter
-            target={moneySaved}
-            prefix="$"
-            style={[
-              TYPE.display,
-              { color: COLORS.accent, textAlign: 'center' },
-            ]}
-          />
-          <Text
-            style={[
-              TYPE.caption,
-              { color: COLORS.textSecondary, textAlign: 'center' },
-            ]}
-          >
-            saved so far
-          </Text>
-
-          <View style={{ height: SPACING.md }} />
-
-          <View style={styles.miniStatsRow}>
-            {[
-              { value: `$${Math.round(dailySpend)}`, label: 'per day' },
-              { value: `$${Math.round(dailySpend * 7)}`, label: 'per week' },
-              { value: `$${Math.round(dailySpend * 30)}`, label: 'per month' },
-            ].map((stat) => (
-              <View key={stat.label} style={styles.miniStat}>
-                <Text style={[TYPE.subheading, { color: COLORS.text }]}>
-                  {stat.value}
-                </Text>
-                <Text style={[TYPE.caption, { color: COLORS.textSecondary }]}>
-                  {stat.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={{ height: SPACING.md }} />
-          <RewardRow moneySaved={moneySaved} />
-        </GlassCard>
-
-        <View style={{ height: SPACING.md }} />
-
-        {/* ── Craving Stats ── */}
-        <Text style={[TYPE.subheading, { color: COLORS.text }]}>
-          Craving Stats
+          Stats
         </Text>
         <View style={{ height: SPACING.sm }} />
         <View style={styles.statsRow}>
           <GlassCard style={{ flex: 1 }}>
             <AnimatedCounter
-              target={23}
+              target={12}
               style={[TYPE.heading, { color: COLORS.accent }]}
             />
             <Text style={[TYPE.caption, { color: COLORS.textSecondary }]}>
-              total cravings
+              stat label
             </Text>
           </GlassCard>
           <GlassCard style={{ flex: 1 }}>
@@ -607,35 +443,19 @@ export default function ProgressScreen() {
               3.2
             </Text>
             <Text style={[TYPE.caption, { color: COLORS.textSecondary }]}>
-              avg intensity /5
+              stat label
             </Text>
           </GlassCard>
         </View>
 
-        <View style={{ height: SPACING.sm }} />
-
-        <GlassCard>
-          <Text style={[TYPE.body, { color: COLORS.text }]}>Top Triggers</Text>
-          <View style={{ height: SPACING.xs }} />
-          <Text style={[TYPE.caption, { color: COLORS.textMuted }]}>
-            Tap for tips
-          </Text>
-          <View style={{ height: SPACING.sm }} />
-          <View style={styles.triggerRow}>
-            {MOCK_TRIGGERS.map((trigger) => (
-              <TriggerPill key={trigger.label} trigger={trigger} />
-            ))}
-          </View>
-        </GlassCard>
-
         <View style={{ height: SPACING.md }} />
 
-        {/* ── Streak Calendar ── */}
+        {/* ── Calendar ── */}
         <Text style={[TYPE.subheading, { color: COLORS.text }]}>
-          Streak Calendar
+          Calendar
         </Text>
         <View style={{ height: SPACING.sm }} />
-        <StreakCalendar quitDate={quitDate} />
+        <StreakCalendar />
       </View>
     </ScreenWrapper>
   );
@@ -690,76 +510,10 @@ const styles = StyleSheet.create({
     padding: 12,
   },
 
-  // Money
-  miniStatsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  miniStat: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    padding: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  rewardRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  rewardChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(246,173,85,0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(246,173,85,0.15)',
-  },
-  nextGoalBox: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 10,
-    padding: 12,
-  },
-  goalProgress: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    marginTop: 8,
-    overflow: 'hidden',
-  },
-  goalFill: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.accent,
-  },
-
-  // Craving stats
+  // Stats
   statsRow: {
     flexDirection: 'row',
     gap: 12,
-  },
-  triggerRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  triggerPill: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  triggerPillActive: {
-    borderWidth: 1,
-    borderColor: COLORS.glassBorderBright,
-  },
-  triggerTip: {
-    marginTop: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
   },
 
   // Calendar

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { PressableScale } from '@/components/ui/PressableScale';
@@ -32,7 +32,7 @@ export default function Name() {
           <PressableScale onPress={() => router.back()} scaleDown={0.9}>
             <ChevronLeft size={24} color={COLORS.textSecondary} />
           </PressableScale>
-          <SegmentedProgressBar totalSteps={11} currentStep={1} />
+          <SegmentedProgressBar totalSteps={5} currentStep={1} />
         </View>
 
         <View style={styles.content}>

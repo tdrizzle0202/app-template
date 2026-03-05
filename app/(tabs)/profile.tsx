@@ -12,9 +12,6 @@ import { restorePurchases } from '@/lib/revenueCat';
 import { useProStatusStore } from '@/lib/proStatusStore';
 import {
   ChevronRight,
-  Share2,
-  Download,
-  RotateCcw,
   Star,
   Shield,
   FileText,
@@ -25,7 +22,7 @@ import {
 import { PressableScale, type HapticType } from '@/components/ui/PressableScale';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { COLORS, TYPE, SPACING, RADIUS } from '@/constants/theme';
-import { useUserStore, getJoinDateString } from '@/store/useUserStore';
+import { useUserStore } from '@/store/useUserStore';
 
 // ── Settings Row ─────────────────────────────────────────
 function SettingsRow({
@@ -117,8 +114,6 @@ function CameraButton({ onPress }: { onPress: () => void }) {
 export default function ProfileScreen() {
   const router = useRouter();
   const name = useUserStore((s) => s.name);
-  const quitDate = useUserStore((s) => s.quitDate);
-  const resetStreakAction = useUserStore((s) => s.resetStreak);
   const clearAllData = useUserStore((s) => s.clearAllData);
   const refreshProStatus = useProStatusStore((s) => s.refreshProStatus);
 
@@ -161,12 +156,7 @@ export default function ProfileScreen() {
 
           {/* Name */}
           <Text style={[TYPE.heading, { color: COLORS.text, textAlign: 'center', marginTop: SPACING.md }]}>
-            {name || 'Fein'}
-          </Text>
-
-          {/* Join date */}
-          <Text style={[TYPE.caption, { color: COLORS.textSecondary, textAlign: 'center', marginTop: SPACING.xs }]}>
-            {quitDate ? `Joined ${getJoinDateString(quitDate)}` : ''}
+            {name || 'User'}
           </Text>
         </View>
 
@@ -176,32 +166,6 @@ export default function ProfileScreen() {
         <View>
         <SectionLabel label="Actions" />
         <GlassGroup>
-          <SettingsRow
-            label="Share My Progress"
-            leftIcon={
-              <Share2 size={18} color={COLORS.textSecondary} />
-            }
-            onPress={() => router.push('/share-progress' as any)}
-          />
-          <SettingsRow
-            label="Export My Data"
-            leftIcon={
-              <Download size={18} color={COLORS.textSecondary} />
-            }
-            onPress={() => router.push('/export-data' as any)}
-          />
-          <SettingsRow
-            label="Reset Streak"
-            leftIcon={<RotateCcw size={18} color={COLORS.danger} />}
-            labelColor={COLORS.danger}
-            onPress={() =>
-              Alert.alert('Reset Streak?', 'This cannot be undone.', [
-                { text: 'Cancel' },
-                { text: 'Reset', style: 'destructive', onPress: () => resetStreakAction() },
-              ])
-            }
-            haptic="Heavy"
-          />
           <SettingsRow
             label="Restart Onboarding"
             leftIcon={<RefreshCw size={18} color={COLORS.danger} />}
@@ -233,7 +197,7 @@ export default function ProfileScreen() {
         <SectionLabel label="About" />
         <GlassGroup>
           <SettingsRow
-            label="Rate Fein"
+            label="Rate App"
             leftIcon={<Star size={18} color={COLORS.textSecondary} />}
             onPress={async () => {
               try {
@@ -249,7 +213,7 @@ export default function ProfileScreen() {
           <SettingsRow
             label="Privacy Policy"
             leftIcon={<Shield size={18} color={COLORS.textSecondary} />}
-            onPress={() => Linking.openURL('https://feinapp.netlify.app')}
+            onPress={() => Linking.openURL('https://example.com/privacy')}
           />
           <SettingsRow
             label="Terms of Service"
@@ -355,5 +319,4 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     marginHorizontal: 16,
   },
-
 });

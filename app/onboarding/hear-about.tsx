@@ -31,11 +31,11 @@ export default function HearAbout() {
         <PressableScale onPress={() => router.back()} scaleDown={0.9}>
           <ChevronLeft size={24} color={COLORS.textSecondary} />
         </PressableScale>
-        <SegmentedProgressBar totalSteps={11} currentStep={9} />
+        <SegmentedProgressBar totalSteps={5} currentStep={3} />
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.heading}>How did you hear about Fein?</Text>
+        <Text style={styles.heading}>How did you hear about us?</Text>
         <Text style={styles.subtitle}>This helps us reach more people like you</Text>
 
         <View style={styles.pills}>

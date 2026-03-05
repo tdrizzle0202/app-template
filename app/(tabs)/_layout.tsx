@@ -2,13 +2,11 @@ import React, { useCallback, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import { Home, TrendingUp, Heart, User } from 'lucide-react-native';
+import { Home, TrendingUp, Zap, User } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withRepeat,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/ui/PressableScale';
@@ -18,30 +16,10 @@ import { LayoutBackgroundContext } from '@/components/ui/ScreenWrapper';
 
 const ACTIVE_COLOR = COLORS.primary;
 const INACTIVE_COLOR = 'rgba(255,255,255,0.35)';
-const SOS_COLOR = COLORS.accent;
-
-// ── SOS Glow (constant pulsing background) ──────────────
-function SOSGlow() {
-  const opacity = useSharedValue(0.1);
-
-  useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(0.25, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
-    );
-  }, [opacity]);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  return <Animated.View style={[styles.sosGlow, style]} />;
-}
 
 // ── Single tab item ──────────────────────────────────────
 interface TabItemProps {
-  icon: 'home' | 'trending' | 'heart' | 'user';
+  icon: 'home' | 'trending' | 'zap' | 'user';
   isFocused: boolean;
   onPress: () => void;
   onLongPress: () => void;
@@ -50,14 +28,12 @@ interface TabItemProps {
 const ICONS = {
   home: Home,
   trending: TrendingUp,
-  heart: Heart,
+  zap: Zap,
   user: User,
 } as const;
 
 function TabItem({ icon, isFocused, onPress, onLongPress }: TabItemProps) {
-  const isSOS = icon === 'heart';
   const Icon = ICONS[icon];
-  const iconSize = isSOS ? 26 : 24;
 
   const progress = useSharedValue(isFocused ? 1 : 0);
   useEffect(() => {
@@ -71,9 +47,6 @@ function TabItem({ icon, isFocused, onPress, onLongPress }: TabItemProps) {
     transform: [{ scale: progress.value }],
   }));
 
-  const activeColor = isSOS ? SOS_COLOR : ACTIVE_COLOR;
-  const inactiveColor = isSOS ? SOS_COLOR : INACTIVE_COLOR;
-
   return (
     <PressableScale
       onPress={onPress}
@@ -86,13 +59,13 @@ function TabItem({ icon, isFocused, onPress, onLongPress }: TabItemProps) {
     >
       <View style={styles.iconContainer}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.iconCenter, inactiveStyle]}>
-          <Icon color={inactiveColor} size={iconSize} />
+          <Icon color={INACTIVE_COLOR} size={24} />
         </Animated.View>
         <Animated.View style={[styles.iconCenter, activeStyle]}>
-          <Icon color={activeColor} size={iconSize} />
+          <Icon color={ACTIVE_COLOR} size={24} />
         </Animated.View>
       </View>
-      <Animated.View style={[isSOS ? styles.sosDot : styles.dot, dotStyle]} />
+      <Animated.View style={[styles.dot, dotStyle]} />
     </PressableScale>
   );
 }
@@ -101,7 +74,7 @@ function TabItem({ icon, isFocused, onPress, onLongPress }: TabItemProps) {
 const TAB_ICONS: Record<string, TabItemProps['icon']> = {
   index: 'home',
   progress: 'trending',
-  sos: 'heart',
+  tools: 'zap',
   profile: 'user',
 };
 
@@ -170,7 +143,7 @@ export default function TabLayout() {
         >
           <Tabs.Screen name="index" />
           <Tabs.Screen name="progress" />
-          <Tabs.Screen name="sos" />
+          <Tabs.Screen name="tools" />
           <Tabs.Screen name="profile" />
         </Tabs>
       </View>
@@ -227,18 +200,5 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: ACTIVE_COLOR,
-  },
-  sosDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: SOS_COLOR,
-  },
-  sosGlow: {
-    position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(246,173,85,0.15)',
   },
 });

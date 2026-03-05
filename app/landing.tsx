@@ -4,65 +4,19 @@ import {
   StyleSheet,
   Text,
   View,
-  Platform,
-  Animated,
   Linking,
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { COLORS, SPACING } from "@/constants/theme";
 import { getCachedProStatus, useProStatusStore } from "@/lib/proStatusStore";
 
-const ONBOARDING_IMAGES = [
-  require("../assets/onboarding/IMG_4969.png"),
-  require("../assets/onboarding/IMG_4970.png"),
-  require("../assets/onboarding/IMG_4975.png"),
-  require("../assets/onboarding/IMG_4977.png"),
-  require("../assets/onboarding/IMG_4979.png"),
-];
-
-const IMAGE_GAP = 10;
-
 const TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
-const PRIVACY_URL = "https://heightai.netlify.app/privacy.html";
+const PRIVACY_URL = "https://example.com/privacy";
 
 export default function LandingScreen() {
   const hasPro = useProStatusStore((state) => state.hasPro);
-  const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const IMAGE_WIDTH = SCREEN_WIDTH * 0.75;
-  const IMAGE_HEIGHT = IMAGE_WIDTH * 1.5;
-  const TOTAL_WIDTH = (IMAGE_WIDTH + IMAGE_GAP) * ONBOARDING_IMAGES.length;
-  const scrollX = useRef(new Animated.Value(0)).current;
-
-  // Auto-scroll animation - seamless infinite loop
-  useEffect(() => {
-    let isCancelled = false;
-
-    const animate = () => {
-      if (isCancelled) return;
-
-      scrollX.setValue(0);
-      Animated.timing(scrollX, {
-        toValue: -TOTAL_WIDTH,
-        duration: ONBOARDING_IMAGES.length * 5000,
-        useNativeDriver: true,
-        easing: (t) => t, // Linear easing for smooth constant speed
-      }).start(({ finished }) => {
-        if (finished && !isCancelled) {
-          animate();
-        }
-      });
-    };
-
-    animate();
-
-    return () => {
-      isCancelled = true;
-      scrollX.stopAnimation();
-    };
-  }, [scrollX, TOTAL_WIDTH]);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,44 +59,23 @@ export default function LandingScreen() {
     Linking.openURL(PRIVACY_URL);
   };
 
-  // Duplicate images for seamless loop
-  const duplicatedImages = [...ONBOARDING_IMAGES, ...ONBOARDING_IMAGES];
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Main Text - at top */}
+        {/* Main Text */}
         <View style={styles.headerContainer}>
           <Text style={styles.mainText}>
-            Expose their{"\n"}true <Text style={styles.heightText}>height</Text>
+            Your App{"\n"}Headline Here
           </Text>
         </View>
 
-        {/* Image Slideshow */}
-        <View style={styles.slideshowContainer}>
-          <Animated.View
-            style={[
-              styles.slideshowTrack,
-              {
-                transform: [{ translateX: scrollX }],
-              },
-            ]}
-          >
-            {duplicatedImages.map((image, index) => (
-              <View key={index} style={[styles.imageWrapper, { width: IMAGE_WIDTH, height: IMAGE_HEIGHT }]}>
-                <Image
-                  source={image}
-                  style={styles.slideshowImage}
-                  contentFit="cover"
-                />
-              </View>
-            ))}
-          </Animated.View>
+        {/* Image / Hero area — add your carousel or hero image */}
+        <View style={styles.heroContainer}>
+          <Text style={styles.placeholderText}>Hero Image / Carousel</Text>
         </View>
 
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
-          {/* Get Started Button */}
           <PressableScale
             style={styles.getStartedButton}
             onPress={handleGetStarted}
@@ -151,7 +84,6 @@ export default function LandingScreen() {
             <Text style={styles.getStartedText}>Get started</Text>
           </PressableScale>
 
-          {/* Terms and Privacy */}
           <Text style={styles.termsText}>
             By continuing, you're{"\n"}accepting our{" "}
             <Text style={styles.termsLink} onPress={handleOpenTerms}>
@@ -184,23 +116,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     marginBottom: SPACING.md,
   },
-  slideshowContainer: {
+  heroContainer: {
     flex: 1,
     width: "100%",
-    overflow: "hidden",
-  },
-  slideshowTrack: {
-    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
   },
-  imageWrapper: {
-    marginRight: IMAGE_GAP,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  slideshowImage: {
-    width: "100%",
-    height: "100%",
+  placeholderText: {
+    fontSize: 16,
+    color: COLORS.gray500,
   },
   mainText: {
     fontSize: 42,
@@ -208,11 +132,6 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     textAlign: "center",
     lineHeight: 48,
-  },
-  heightText: {
-    fontFamily: Platform.OS === "ios" ? "Snell Roundhand" : "cursive",
-    fontWeight: "700",
-    fontSize: 46,
   },
   bottomSection: {
     width: "100%",
