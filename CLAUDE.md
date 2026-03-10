@@ -8,6 +8,8 @@
 - Replace placeholder content in tab screens and onboarding
 - Update `TERMS_URL` and `PRIVACY_URL` in `paywall.tsx` and `landing.tsx`
 - Add `.env` with RevenueCat + Supabase keys
+- Add Google OAuth env vars: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`
+- For Android: drop `google-services.json` in project root (from Firebase Console)
 
 **Tech stack:** Check `package.json` for current versions. Core: Expo, Expo Router, React Native, Reanimated, Zustand, Supabase, RevenueCat
 
@@ -44,6 +46,11 @@
 **Paywall:**
 - Full RevenueCat flow (annual + lifetime plans)
 - Package loading, purchase, restore built in
+
+**Auth:**
+- Google Sign-In via `@react-native-google-signin/google-signin` (native, not web-based)
+- Auth helpers in `lib/auth/google-native.ts` — call `configureGoogleSignIn()` at startup
+- Landing screen has Google button wired up; connect `result.idToken` to your backend (Supabase, etc.)
 
 **State:**
 - `useUserStore` — persisted user data (app-specific fields)

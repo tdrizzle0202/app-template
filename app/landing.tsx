@@ -1,22 +1,27 @@
 import { router } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
   View,
   Linking,
-  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { COLORS, SPACING } from "@/constants/theme";
+import { COLORS, SPACING, RADIUS } from "@/constants/theme";
 import { getCachedProStatus, useProStatusStore } from "@/lib/proStatusStore";
+import {
+  signInWithGoogle,
+  isGoogleCancelledError,
+} from "@/lib/auth/google-native";
 
 const TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
 const PRIVACY_URL = "https://example.com/privacy";
 
 export default function LandingScreen() {
   const hasPro = useProStatusStore((state) => state.hasPro);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,6 +54,34 @@ export default function LandingScreen() {
     }
 
     router.push("/onboarding");
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (isSigningIn) return;
+    setIsSigningIn(true);
+
+    try {
+      const result = await signInWithGoogle();
+      if (!result) {
+        // User cancelled or no saved credential
+        setIsSigningIn(false);
+        return;
+      }
+
+      // TODO: Send result.idToken to your backend (e.g. Supabase):
+      // await supabase.auth.signInWithIdToken({
+      //   provider: 'google',
+      //   token: result.idToken,
+      // });
+
+      router.push("/onboarding");
+    } catch (error) {
+      if (!isGoogleCancelledError(error)) {
+        Alert.alert("Sign-In Error", "Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   const handleOpenTerms = () => {
@@ -84,6 +117,18 @@ export default function LandingScreen() {
             <Text style={styles.getStartedText}>Get started</Text>
           </PressableScale>
 
+          <PressableScale
+            style={styles.googleButton}
+            onPress={handleGoogleSignIn}
+            haptic="Medium"
+            disabled={isSigningIn}
+          >
+            <GoogleLogo />
+            <Text style={styles.googleButtonText}>
+              {isSigningIn ? "Signing in…" : "Continue with Google"}
+            </Text>
+          </PressableScale>
+
           <Text style={styles.termsText}>
             By continuing, you're{"\n"}accepting our{" "}
             <Text style={styles.termsLink} onPress={handleOpenTerms}>
@@ -97,6 +142,15 @@ export default function LandingScreen() {
         </View>
       </View>
     </SafeAreaView>
+  );
+}
+
+// ── Inline Google "G" logo (no extra dependency) ─────────
+function GoogleLogo() {
+  return (
+    <View style={styles.googleLogoContainer}>
+      <Text style={styles.googleLogoText}>G</Text>
+    </View>
   );
 }
 
@@ -151,6 +205,39 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.white,
     textAlign: "center",
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.white,
+    paddingHorizontal: SPACING["3xl"],
+    paddingVertical: 14,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "#DADCE0",
+    borderCurve: "continuous",
+    width: "75%",
+    marginBottom: SPACING.sm,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.black,
+    marginLeft: SPACING.sm,
+  },
+  googleLogoContainer: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#4285F4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  googleLogoText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.white,
   },
   termsText: {
     fontSize: 11,
