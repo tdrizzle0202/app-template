@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Alert,
   Linking,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -18,6 +19,8 @@ import {
   User,
   Camera,
   RefreshCw,
+  CreditCard,
+  Trash2,
 } from 'lucide-react-native';
 import { PressableScale, type HapticType } from '@/components/ui/PressableScale';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
@@ -167,6 +170,15 @@ export default function ProfileScreen() {
         <SectionLabel label="Actions" />
         <GlassGroup>
           <SettingsRow
+            label="Manage Subscription"
+            leftIcon={<CreditCard size={18} color={COLORS.textSecondary} />}
+            onPress={() => Linking.openURL(
+              Platform.OS === 'ios'
+                ? 'https://apps.apple.com/account/subscriptions'
+                : 'https://play.google.com/store/account/subscriptions'
+            )}
+          />
+          <SettingsRow
             label="Restart Onboarding"
             leftIcon={<RefreshCw size={18} color={COLORS.danger} />}
             labelColor={COLORS.danger}
@@ -176,6 +188,26 @@ export default function ProfileScreen() {
                 { text: 'Cancel' },
                 {
                   text: 'Restart',
+                  style: 'destructive',
+                  onPress: async () => {
+                    clearAllData();
+                    await AsyncStorage.removeItem('hasSeenOnboarding');
+                    router.replace('/onboarding/welcome' as any);
+                  },
+                },
+              ])
+            }
+          />
+          <SettingsRow
+            label="Delete Account"
+            leftIcon={<Trash2 size={18} color={COLORS.danger} />}
+            labelColor={COLORS.danger}
+            haptic="Heavy"
+            onPress={() =>
+              Alert.alert('Delete Account?', 'This will permanently delete your account and all associated data. This action cannot be undone.', [
+                { text: 'Cancel' },
+                {
+                  text: 'Delete',
                   style: 'destructive',
                   onPress: async () => {
                     clearAllData();
